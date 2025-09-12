@@ -1,0 +1,316 @@
+{
+  "tiposPlato": [
+    "Entradas",
+    "Platos Fuertes",
+    "Sopas",
+    "Bebidas",
+    "Postres"
+  ],
+
+  "Entradas": [
+    {
+      "name": "Patacones",
+      "isDishVisible": false,
+      "img": "productos/patacones.png",
+      "terminoCarne": false,
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Dados de queso",
+      "isDishVisible": false,
+      "img": "productos/dadosQueso.png",
+      "terminoCarne": false,
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Aros de cebolla",
+      "isDishVisible": false,
+      "img": "productos/arosCebolla.png",
+      "terminoCarne": false,
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Nachos",
+      "isDishVisible": false,
+      "img": "productos/nachos.png",
+      "terminoCarne": false,
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    }
+  ],
+
+  "PlatosFuertes": [
+    {
+      "name": "Ribeye",
+      "isDishVisible": false,
+      "img": "productos/ribEye.png",
+      "terminoCarne": true,
+      "guarniciones": 2,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Pollo a la plancha",
+      "isDishVisible": false,
+      "img": "productos/polloALaPlancha.png",
+      "terminoCarne": false,
+      "guarniciones": 2,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Pescado ftito",
+      "isDishVisible": false,
+      "img": "productos/pescadoFrito.png",
+      "terminoCarne": false,
+      "guarniciones": 2,
+      "cantidadRestante": 0
+    },
+    {
+      "name": "Lomo de cerdo",
+      "isDishVisible": true,
+      "img": "productos/lomoCerdo.png",
+      "terminoCarne": false,
+      "guarniciones": 2,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Pasta carbonara",
+      "isDishVisible": false,
+      "img": "productos/pastaCarbonara.png",
+      "terminoCarne": false,
+      "guarniciones": 1,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Curry de garbanzos",
+      "isDishVisible": false,
+      "img": "productos/curryGarbanzos.png",
+      "terminoCarne": false,
+      "guarniciones": 2,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Tacos de pescado",
+      "isDishVisible": false,
+      "img": "productos/tacosPescado.png",
+      "terminoCarne": false,
+      "guarniciones": 2,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Arroz con pollo",
+      "isDishVisible": false,
+      "img": "productos/arrozPollo.png",
+      "terminoCarne": false,
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Hamburguesa Angus",
+      "isDishVisible": false,
+      "img": "productos/hamburguesaAngus.png",
+      "terminoCarne": true,
+      "guarniciones": 1,
+      "cantidadRestante": 100
+    }
+  ],
+
+  "Sopas": [
+    {
+      "name": "Sopa de garbanzos",
+      "isDishVisible": false,
+      "img": "productos/sopaGarbanzos.png",
+      "terminoCarne": false,
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Sopa azteca",
+      "isDishVisible": false,
+      "img": "productos/sopaAzteca.png",
+      "terminoCarne": false,
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Sopa de tortilla",
+      "isDishVisible": false,
+      "img": "productos/sopaTortilla.png",
+      "terminoCarne": false,
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Crema de ayote",
+      "isDishVisible": false,
+      "img": "productos/cremaAyote.png",
+      "terminoCarne": false,
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Sopa francesa de cebolla",
+      "isDishVisible": false,
+      "img": "productos/sopaCebolla.png",
+      "terminoCarne": false,
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Sopa de pollo y fideos",
+      "isDishVisible": false,
+      "img": "productos/sopaPollo.png",
+      "terminoCarne": false,
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    }
+  ],
+
+  "Bebidas": [
+    {
+      "name": "Coca cola",
+      "isDishVisible": false,
+      "img": "productos/coca.png",
+      "terminoCarne": false,
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Coca cola light",
+      "isDishVisible": false,
+      "img": "productos/cocaLight.png",
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Fanta kolita",
+      "isDishVisible": false,
+      "img": "productos/fantaKolita.png",
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Fanta naranja",
+      "isDishVisible": false,
+      "img": "productos/fantaNaranja.png",
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Ginger Ale",
+      "isDishVisible": false,
+      "img": "productos/gingerAle.png",
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Horchata",
+      "isDishVisible": false,
+      "img": "productos/horchata.png",
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Limonada",
+      "isDishVisible": false,
+      "img": "productos/limonada.png",
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Limonada con hierbabuena",
+      "isDishVisible": false,
+      "img": "productos/limonadaHierbabuena.png",
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Mango",
+      "isDishVisible": false,
+      "img": "productos/mango.png",
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Mora",
+      "isDishVisible": false,
+      "img": "productos/mora.png",
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Sprite",
+      "isDishVisible": false,
+      "img": "productos/sprite.png",
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Tamarindo",
+      "isDishVisible": false,
+      "img": "productos/tamarindo.png",
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    }
+  ],
+
+  "Postres": [
+    {
+      "name": "Tiramisú",
+      "isDishVisible": false,
+      "img": "productos/tiramisu.png",
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Flan de coco",
+      "isDishVisible": false,
+      "img": "productos/flanCoco.png",
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Volcan de chocolate",
+      "isDishVisible": false,
+      "img": "productos/volcanChocolate.png",
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Tres leches",
+      "isDishVisible": false,
+      "img": "productos/tresLeches.png",
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    },
+    {
+      "name": "Chessecake",
+      "isDishVisible": false,
+      "img": "productos/cheesecake.png",
+      "guarniciones": 0,
+      "cantidadRestante": 100
+    }
+  ],
+  
+  "guarniciones": [
+    "Arroz blanco",
+    "Puré de papa",
+    "Papa asada",
+    "Papas fritas",
+    "Frijoles negros",
+    "Ensalada mixta",
+    "Ensalada de col",
+    "Ensalada de quinoa",
+    "Ensalada de papa",
+    "Ensalada de espinacas"
+  ],
+  "terminosCarne": [
+    "Roja",
+    "Medio roja",
+    "Medio",
+    "Tres cuartos",
+    "Bien hecha"
+  ]
+}

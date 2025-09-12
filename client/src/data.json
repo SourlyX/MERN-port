@@ -1,0 +1,429 @@
+{
+  "techskills": [
+    {
+      "image": "images/skills/Frontend.png",
+      "title": "Frontend",
+      "description": "HTML5, CSS3, JavaScript and React to build responsive, accessible, and interactive UIs."
+    },
+    {
+      "image": "images/skills/Backend.png",
+      "title": "Backend & Databases",
+      "description": "Node.js, Express, MongoDB, SQL for creating scalable APIs and managing data efficiently."
+    },
+    {
+      "image": "images/skills/Tools.png",
+      "title": "Tools & Methodologies",
+      "description": "Git for version control, Jira for Agile project management, and Scrum methodologies."
+    },
+    {
+      "image": "images/skills/AI.png",
+      "title": "AI-assisted development",
+      "description": "I leverage AI tools like ChatGPT and GitHub Copilot to boost productivity, debug faster, and write better code."
+    }
+  ],
+
+  "softSkills": [
+    {
+      "image": "images/softskills/problemSolving.jpeg",
+      "title": "Problem-solving",
+      "description": "I tackle challenges logically and efficiently to find effective solutions."
+    },
+    {
+      "image": "images/softskills/communication.jpeg",
+      "title": "Communication",
+      "description": "I express technical ideas clearly and adapt to different audiences."
+    },
+    {
+      "image": "images/softskills/collaboration.jpeg",
+      "title": "Collaboration",
+      "description": "I contribute to team efforts and support others to achieve shared goals."
+    },
+    {
+      "image": "images/softskills/attentionDetail.jpeg",
+      "title": "Attention to detail",
+      "description": "I catch bugs and inconsistencies early to maintain high code quality."
+    },
+    {
+      "image": "images/softskills/curiosity.png",
+      "title": "Curiosity",
+      "description": "I explore new tools and techniques to constantly improve my work."
+    },
+    {
+      "image": "images/softskills/adaptabilityFeedback.jpeg",
+      "title": "Adaptability to feedback",
+      "description": "I take feedback constructively and apply it to grow as a developer."
+    },
+    {
+      "image": "images/softskills/timeManagement.jpeg",
+      "title": "Time management",
+      "description": "I organize tasks and prioritize effectively to meet deadlines."
+    },
+    {
+      "image": "images/softskills/continuousLearning.jpeg",
+      "title": "Continuous learning",
+      "description": "I stay up to date with evolving technologies and best practices."
+    }
+  ],
+
+  "myProjects": [
+    {
+      "image": "images/projects/restaurant.png",
+      "title": "Restaurant",
+      "description": "This project is a restaurant management app built with React, designed to assist waiters in taking customer orders efficiently. The app allows staff to add orders directly to the order list, streamlining the ordering process. It is connected to a Node.js backend, ensuring real-time updates between the front and back end (In menu items, for example). However, some functionalities, like saving completed orders, are still under development. This project highlights my skills in building responsive front-end applications with backend integration to improve day-to-day operations.",
+      "url": "restaurant",
+      "inDevelopment": false
+    },
+    {
+      "image": "images/projects/todo.png",
+      "title": "To-do list",
+      "description": "This project is a simple and functional To-Do List built with React. It allows users to create, edit, and delete tasks, offering a clean and intuitive interface for managing daily activities. The application stores tasks locally for now, ensuring usability even without backend integration. However, a connected version with a Node.js backend is currently under development to enable persistent storage and synchronization across devices. This project reflects my focus on dynamic front-end design and will soon evolve with full-stack functionality.",
+      "url": "to-do-list",
+      "inDevelopment": false
+    },
+    {
+      "image": "images/projects/Pokedex.png",
+      "title": "Pokedex",
+      "description": "This project is a Pokédex-style app built with React that uses the PokéAPI to display detailed information about various Pokémon. Users can browse, search, and explore stats, abilities, and types for each Pokémon in a responsive and visually appealing interface. The app focuses entirely on front-end functionality, fetching data dynamically from the API. It showcases my ability to work with external APIs and create interactive user experiences.",
+      "url": "pokedex",
+      "inDevelopment": false
+    },
+    {
+      "image": "images/projects/development.jpeg",
+      "title": "Recipes App",
+      "description": "This project is a Pokédex-style app built with React that uses the PokéAPI to display detailed information about various Pokémon. Users can browse, search, and explore stats, abilities, and types for each Pokémon in a responsive and visually appealing interface. The app focuses entirely on front-end functionality, fetching data dynamically from the API. It showcases my ability to work with external APIs and create interactive user experiences.",
+      "url": "recetas",
+      "inDevelopment": true
+    },
+    {
+      "image": "images/projects/development.jpeg",
+      "title": "Income & Expense Tracker",
+      "description": "A lightweight application that allows users to record expenses by category, amount, and date. The data updates dynamically, displaying totals and summaries to visualize spending distribution. A simple but functional CRUD project showcasing form handling, state management, and dynamic calculations in React.",
+      "url": "gastos",
+      "inDevelopment": false
+    },
+    {
+      "image": "images/projects/development.jpeg",
+      "title": "Sticky Notes",
+      "description": "This project is a Pokédex-style app built with React that uses the PokéAPI to display detailed information about various Pokémon. Users can browse, search, and explore stats, abilities, and types for each Pokémon in a responsive and visually appealing interface. The app focuses entirely on front-end functionality, fetching data dynamically from the API. It showcases my ability to work with external APIs and create interactive user experiences.",
+      "url": "notas",
+      "inDevelopment": true
+    }
+  ],
+
+  "navbarItems": [
+    { "label": "Home", "url": "/" },
+    { "label": "About", "url": "/about" },
+    { "label": "Projects", "url": "/projects" },
+    { "label": "Contact", "url": "#contact" }
+  ],
+
+  "introCards": [
+    {
+      "title": "Passion",
+      "description": "Self-taught programmer with curiosity since childhood.",
+      "image": "images/Passion.png"
+    },
+    {
+      "title": "Work Ethic",
+      "description": "Hardworking and disciplined, focused on delivering results.",
+      "image": "images/WorkEthic.png"
+    },
+    {
+      "title": "Team Player",
+      "description": "Thrives both independently and in group environments.",
+      "image": "images/TeamPlayer.png"
+    },
+    {
+      "title": "AI-Powered",
+      "description": "I leverage AI tools like ChatGPT and Copilot to boost productivity and code quality.",
+      "image": "images/AI.png"
+    },
+    {
+      "title": "Creative Problem Solver",
+      "description": "I often find 'unconventional' solutions that others might overlook.",
+      "image": "images/CreativeThinking.png"
+    },
+    {
+      "title": "Methodical & Results-Oriented",
+      "description": "I approach work with discipline and clear focus on achieving goals.",
+      "image": "images/Methodical.png"
+    }
+  ],
+  
+  "ProfessionalExperience": [
+    {
+      "time": "March 2016",
+      "description": "I initiated studying Software development in college. Since I was a little kid I wanted to be a software developer to create lots of amazing things and I was starting to achieve it."
+    },
+    {
+      "time": "April 2019",
+      "description": "I got my first full-time job as a customer service representative, since this moment I have had multiple jobs until the present."
+    },
+    {
+      "time": "2020",
+      "description": "The pandemic started, it became very difficult to continue my career in college. I had to stop studying to continue working."
+    },
+    {
+      "time": "June 2021",
+      "description": "I took very seriously my goal to be a developer and initiated studying as a self-taught web developer and knew a lot of technologies in the web development world as Django, Flask, Angular, Vue, React and also initiated getting to know the databases as SQL and MongoDB."
+    },
+    {
+      "time": "December 2021 - March 2023",
+      "description": "QA analyst in Konrad Group: I helped with system issues with a web and mobile application. Checking it to see the releases were in a good status to release them. I also had to replicate customer issues to find the problem they were having in the application and forward the issue to the developers."
+    },
+    {
+      "time": "August 2025",
+      "description": "Besides my knowledge as a self-taught developer I wanted to continue with my college career. I'm currently finishing college to acquire my title."
+    }
+  ],
+
+  "certificationsData": [
+    {
+      "title": "Build Apps Using React: Introducing React for Web Applications",
+      "company": "Skillsoft",
+      "date": "Aug. 2023",
+      "credentialId": "5523621",
+      "imagePath": "/images/certifications/Build Apps Using React Introducing React for Web Applications.png",
+      "skills": "Computer Science"
+    },
+    {
+      "title": "Build Apps Using React: Local Machine & Online Playgrounds",
+      "company": "Skillsoft",
+      "date": "Aug. 2023",
+      "credentialId": "5523692",
+      "imagePath": "/images/certifications/Build Apps Using React Local Machine & Online Playgrounds.png",
+      "skills": "Computer Science"
+    },
+    {
+      "title": "Navigating Software Testing Tools: Types of Software Testing Tools",
+      "company": "Skillsoft",
+      "date": "Aug. 2023",
+      "credentialId": "5509961",
+      "imagePath": "/images/certifications/Navigating Software Testing Tools Types of Software Testing Tools.png",
+      "skills": "Computer Science"
+    },
+    {
+      "title": ".NET Development with Visual Studio",
+      "company": "Skillsoft",
+      "date": "Jul. 2023",
+      "credentialId": "5421308",
+      "imagePath": "/images/certifications/NET Development with Visual Studio.png",
+      "skills": "C# · .NET Framework · Computer Science"
+    },
+    {
+      "title": "ASP.NET MVC Web Applications: Introduction",
+      "company": "Skillsoft",
+      "date": "Jul. 2023",
+      "credentialId": "5509907",
+      "imagePath": "/images/certifications/ASPMVC.png",
+      "skills": "C# · .NET Framework · Computer Science"
+    },
+    {
+      "title": "HTML5 with JavaScript & CSS3: Advanced CSS",
+      "company": "Skillsoft",
+      "date": "Jul. 2023",
+      "credentialId": "5351755",
+      "imagePath": "/images/certifications/HTML5 with JavaScript & CSS3 Advanced CSS.png",
+      "skills": "Computer Science"
+    },
+    {
+      "title": "MEAN Stack Development",
+      "company": "Skillsoft",
+      "date": "Jul. 2023",
+      "credentialId": "5313125",
+      "imagePath": "/images/certifications/MEAN Stack Development.png",
+      "skills": "Computer Science"
+    },
+    {
+      "title": "MongoDB Aggregation",
+      "company": "Skillsoft",
+      "date": "Jul. 2023",
+      "credentialId": "5367339",
+      "imagePath": "/images/certifications/MongoDB Aggregation.png",
+      "skills": "Computer Science"
+    },
+    {
+      "title": "MongoDB Querying",
+      "company": "Skillsoft",
+      "date": "Jul. 2023",
+      "credentialId": "5302759",
+      "imagePath": "/images/certifications/MongoDB Querying.png",
+      "skills": "Computer Science"
+    },
+    {
+      "title": "REST API with Java: REST APIs with POSTMAN & CRUD",
+      "company": "Skillsoft",
+      "date": "Jul. 2023",
+      "credentialId": "5367975",
+      "imagePath": "/images/certifications/REST API with Java REST APIs with POSTMAN & CRUD.png",
+      "skills": "Computer Science"
+    },
+    {
+      "title": "AWS Developer Associate 2022: Amazon Elastic Compute Cloud (EC2)",
+      "company": "Skillsoft",
+      "date": "Jun. 2023",
+      "credentialId": "5010674",
+      "imagePath": "/images/certifications/AWS Developer Associate 2022 Amazon Elastic Compute Cloud (EC2).png",
+      "skills": "Computer Science · Amazon Web Services (AWS)"
+    },
+    {
+      "title": "Introduction to Git",
+      "company": "Skillsoft",
+      "date": "Jun. 2023",
+      "credentialId": "5086974",
+      "imagePath": "/images/certifications/Introduction to Git.png",
+      "skills": "Computer Science"
+    },
+    {
+      "title": "Jenkins for DevOps: The Basics of Jenkins",
+      "company": "Skillsoft",
+      "date": "Jun. 2023",
+      "credentialId": "5073564",
+      "imagePath": "/images/certifications/Jenkins for DevOps The Basics of Jenkins.png",
+      "skills": "Computer Science"
+    },
+    {
+      "title": "Scrum Foundation: Scrum Certification & the Scrum Guide",
+      "company": "Skillsoft",
+      "date": "Jun. 2023",
+      "credentialId": "5021856",
+      "imagePath": "/images/certifications/Scrum Foundation Scrum Certification & the Scrum Guide.png",
+      "skills": "Computer Science"
+    },
+    {
+      "title": "Scrum Toolbox: Jira for Scrum",
+      "company": "Skillsoft",
+      "date": "Jun. 2023",
+      "credentialId": "5042690",
+      "imagePath": "/images/certifications/Scrum Toolbox Jira for Scrum.png",
+      "skills": "Computer Science"
+    },
+    {
+      "title": "Secure Programmer: Software Testing",
+      "company": "Skillsoft",
+      "date": "Jun. 2023",
+      "credentialId": "5023254",
+      "imagePath": "/images/certifications/Secure Programmer Software Testing.png",
+      "skills": "Computer Science"
+    },
+    {
+      "title": "Working with Git",
+      "company": "Skillsoft",
+      "date": "Jun. 2023",
+      "credentialId": "5102118",
+      "imagePath": "/images/certifications/Working with Git.png",
+      "skills": "Computer Science"
+    },
+    {
+      "title": "The Language of DevOps: DevOps Tools & Processes",
+      "company": "Skillsoft",
+      "date": "May. 2023",
+      "credentialId": "4804472",
+      "imagePath": "/images/certifications/The Language of DevOps DevOps Tools & Processes.png",
+      "skills": "Computer Science"
+    },
+    {
+      "title": "Python without Borders: HTML, CSS, Flask and MySQL",
+      "company": "Hola Mundo",
+      "date": "Nov. 2021",
+      "credentialId": "UC-05293651-db5c-42f6-ad31-a2172db20bad",
+      "imagePath": "/images/certifications/Python sin fronteras HTML, CSS, Flask y MySQL.jpg",
+      "skills": "HTML5 · Front-end Coding · Computer Science · Git · Design Patterns"
+    }
+  ],
+
+  "skills": [
+    {
+      "name": "React",
+      "icon": "/images/skills/React.svg",
+      "description": "Frontend library for building UI components."
+    },
+    {
+      "name": "JavaScript",
+      "icon": "/images/skills/JavaScript.svg",
+      "description": "Dynamic programming language for web development."
+    },
+    {
+      "name": "MongoDB",
+      "icon": "/images/skills/MongoDB.svg",
+      "description": "NoSQL database for scalable and flexible applications."
+    },
+    {
+      "name": "HTML5",
+      "icon": "/images/skills/HTML5.svg",
+      "description": "Markup language for structuring web content."
+    },
+    {
+      "name": "CSS3",
+      "icon": "/images/skills/CSS3.svg",
+      "description": "Style sheet language for designing web pages."
+    },
+    {
+      "name": "Git",
+      "icon": "/images/skills/Git.svg",
+      "description": "Version control system for tracking code changes."
+    },
+    {
+      "name": "Node.js",
+      "icon": "/images/skills/Nodejs.svg",
+      "description": "JavaScript runtime for building scalable backend applications."
+    },
+    {
+      "name": "Express",
+      "icon": "/images/skills/Express.svg",
+      "description": "Web framework for Node.js to build APIs and web servers."
+    }
+  ],
+
+  "interestsCards": [
+    {
+      "title": "Reading",
+      "description": "Exploring novels, especially sci-fi and fantasy worlds.",
+      "image": "images/Interests/Reading.png"
+    },
+    {
+      "title": "Gaming",
+      "description": "Immersing in video games for fun and inspiration.",
+      "image": "images/Interests/Gaming.png"
+    },
+    {
+      "title": "Programming",
+      "description": "Building projects and experimenting with code as a hobby.",
+      "image": "images/Interests/Programming.png"
+    }
+  ],
+
+  "ProfessionalGoals": [
+    {
+      "time": "Short-term",
+      "description": "Secure a position as a web developer and contribute to impactful projects while continuing to strengthen my technical expertise."
+    },
+    {
+      "time": "Mid-term",
+      "description": "Advance within the company by taking on more complex projects, collaborating with cross-functional teams, and expanding my leadership skills."
+    },
+    {
+      "time": "Long-term",
+      "description": "Become a highly skilled senior developer recognized for delivering efficient, scalable solutions and mentoring junior developers."
+    }
+  ],
+
+  "Languages": [
+    {
+      "name": "Spanish",
+      "progress": "100"
+    },
+    {
+      "name": "English",
+      "progress": "90"
+    },
+    {
+      "name": "German",
+      "progress": "33"
+    },
+    {
+      "name": "Esperanto",
+      "progress": "41"
+    }
+  ]
+}
