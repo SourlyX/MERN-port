@@ -1,13 +1,18 @@
-const express = require('express');
-const mongoose = require('mongoose');
 require('dotenv').config();
 
-const app = express();
+const express = require('express');
+const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
+
+const app = express(); // <-- definir app primero
+
 const PORT = process.env.PORT || 5001;
 
 // Middleware para que Express entienda JSON
-// CORRECCIÓN: Es app.use(), no app.arguments()
 app.use(express.json());
+
+// Middleware para cookies
+app.use(cookieParser());
 
 // Conexión a MongoDB
 mongoose.connect(process.env.MONGO_URI)

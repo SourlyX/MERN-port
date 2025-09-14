@@ -1,5 +1,14 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+const generateAccessToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '15m' });
+};
+
+const generateRefreshToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '30d' });
+};
 
 // @desc    Función para registrar un nuevo usuario
 const registerUser = async (req, res) => {
@@ -45,22 +54,22 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Por favor, completa todos los campos' });
-    }
-
     const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(401).json({ success: false, message: 'Credenciales inválidas' });
-    }
+    if (!user) return res.status(401).json({ success: false, message: 'Credenciales inválidas' });
 
     const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ success: false, message: 'Credenciales inválidas' });
 
-    if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Credenciales inválidas' });
-    }
+    const accessToken = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
+    // Guardar refresh token en cookie HttpOnly
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'Strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 días
+    });
 
     res.status(200).json({
       success: true,
@@ -69,6 +78,7 @@ const loginUser = async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
+        accessToken,
         incomes: user.incomes,
         expenses: user.expenses,
         todos: user.todos
@@ -76,7 +86,7 @@ const loginUser = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error en loginUser:', error); // Log más descriptivo
+    console.error('Error en loginUser:', error);
     res.status(500).json({ success: false, message: 'Error en el servidor' });
   }
 };
