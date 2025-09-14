@@ -1,34 +1,67 @@
 const User = require('../models/User');
-const bcrypt = require('bcryptjs'); // Necesitamos bcrypt para comparar contraseñas
+const bcrypt = require('bcryptjs');
 
-// ... (la función registerUser que ya creamos)
+// @desc    Función para registrar un nuevo usuario
+const registerUser = async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    if (!username || !email || !password) {
+      return res.status(400).json({ success: false, message: 'Por favor, completa todos los campos' });
+    }
+
+    const userExists = await User.findOne({ email });
+    const usernameExists = await User.findOne({ username });
+
+    if (userExists || usernameExists) {
+      return res.status(400).json({ success: false, message: 'El email o nombre de usuario ya está en uso' });
+    }
+
+    const user = new User({
+      username,
+      email,
+      password,
+    });
+
+    await user.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Usuario registrado exitosamente',
+      data: {
+        id: user._id,
+        username: user.username,
+        email: user.email
+      }
+    });
+
+  } catch (error) {
+    console.error('Error en registerUser:', error); // Log más descriptivo
+    res.status(500).json({ success: false, message: 'Error en el servidor' });
+  }
+};
 
 // @desc    Función para autenticar un usuario
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 1. Verificar que llegaron los datos
     if (!email || !password) {
       return res.status(400).json({ success: false, message: 'Por favor, completa todos los campos' });
     }
 
-    // 2. Buscar al usuario por su email
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(401).json({ success: false, message: 'Credenciales inválidas' }); // Mensaje genérico por seguridad
+      return res.status(401).json({ success: false, message: 'Credenciales inválidas' });
     }
 
-    // 3. Comparar la contraseña ingresada con la hasheada en la BD
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Credenciales inválidas' });
     }
 
-    // 4. ¡Éxito! Enviar todos los datos del usuario
-    // (De nuevo, aquí generarías y enviarías un token JWT)
     res.status(200).json({
       success: true,
       message: 'Login exitoso',
@@ -43,12 +76,13 @@ const loginUser = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    console.error('Error en loginUser:', error); // Log más descriptivo
     res.status(500).json({ success: false, message: 'Error en el servidor' });
   }
 };
 
+// Asegúrate que ambas funciones estén definidas ANTES de exportarlas.
 module.exports = {
   registerUser,
-  loginUser // Exportamos la nueva función
+  loginUser
 };

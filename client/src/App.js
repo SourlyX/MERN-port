@@ -12,6 +12,8 @@ import ToDoList from "./components/projects/ToDoList"
 import Restarurante from "./components/routes/restaurant/Restaurante"
 import Pokedex from "./components/projects/pokeapi/Pokedex"
 import Expenses from "./components/projects/expenses/Expenses"
+import Login from "./components/routes/Login"
+import Register from "./components/routes/Register"
 import data from "./data.json"
 import "./index.css"
 import { HelmetProvider } from "react-helmet-async"
@@ -80,6 +82,8 @@ function App() {
         <Route path="/projects/restaurant" element={<Restarurante/>}/>
         <Route path="/projects/pokedex" element={<Pokedex/>}/>
         <Route path="/projects/gastos" element={<Expenses income={income} setIncome={setIncome} expenses={expenses} setExpenses={setExpenses}/>}/>
+        <Route path="/login" element={<Login/>}/>
+        <Route path="/register" element={<Register/>}/>
       </Routes>
       <Contact id="contact" ref={contactRef}/>
       <Footer/>
