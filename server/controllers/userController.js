@@ -91,8 +91,31 @@ const loginUser = async (req, res) => {
   }
 };
 
+// @desc    Renovar access token usando refresh token (cookie)
+// @route   POST /api/users/refresh
+// @access  Public
+const refreshToken = (req, res) => {
+  const token = req.cookies.refreshToken;
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'No refresh token' });
+  }
+
+  try {
+    const payload = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+    const newAccessToken = generateAccessToken(payload.id);
+
+    res.status(200).json({
+      success: true,
+      accessToken: newAccessToken
+    });
+  } catch (error) {
+    return res.status(403).json({ success: false, message: 'Refresh token inválido o expirado' });
+  }
+};
+
 // Asegúrate que ambas funciones estén definidas ANTES de exportarlas.
 module.exports = {
   registerUser,
-  loginUser
+  loginUser,
+  refreshToken
 };
