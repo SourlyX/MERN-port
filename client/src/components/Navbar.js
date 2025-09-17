@@ -1,5 +1,7 @@
-import React from 'react'
 import styled from 'styled-components'
+import { useContext } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { AuthContext } from '../context/AuthContext'
 
 const Nav = styled.nav`
   position: fixed;
@@ -51,7 +53,7 @@ const ListItem = styled.li`
   }
 `
 
-const Link = styled.a`
+const Hyperlink = styled.a`
   color: #55F5ED;
   text-decoration: none;
   padding: 10px;
@@ -64,7 +66,22 @@ const Link = styled.a`
   }
 `
 
-function Navbar({ items, contactRef }){
+function Navbar({ items, contactRef }) {
+  const { isAuthenticated, logout } = useContext(AuthContext)
+  const navigate = useNavigate()
+  let navItems = [...items]
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
+
+  if (isAuthenticated) {
+    navItems.push({ label: 'Logout', url: '/logout' })
+  } else {
+    navItems.push({ label: 'Login', url: '/login' })
+  }
+
   const handleClick = (url) => {
     if (url === "#contact") {
       contactRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -79,13 +96,21 @@ function Navbar({ items, contactRef }){
   return (
     <Nav>
       <List>
-        {items.map((item, index) => (
-          <ListItem label={item.label} key={index}>
-            <Link as="button" onClick={() => handleClick(item.url)}>
-              {item.label}
-            </Link>
-          </ListItem>
-        ))}
+        {navItems.map((item, index) =>
+          item.label === 'Logout' ? (
+            <ListItem label={item.label} key={index}>
+              <Hyperlink as="button" onClick={handleLogout}>
+                {item.label}
+              </Hyperlink>
+            </ListItem>
+          ) : (
+            <ListItem label={item.label} key={index}>
+              <Hyperlink as={Link} to={item.url} onClick={() => handleClick(item.url)}>
+                {item.label}
+              </Hyperlink>
+            </ListItem>
+          )
+        )}
       </List>
     </Nav>
   )
