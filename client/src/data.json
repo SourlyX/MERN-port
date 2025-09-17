@@ -95,7 +95,7 @@
       "inDevelopment": true
     },
     {
-      "image": "images/projects/development.jpeg",
+      "image": "images/projects/incomes&expenses.png",
       "title": "Income & Expense Tracker",
       "description": "A lightweight application that allows users to record expenses by category, amount, and date. The data updates dynamically, displaying totals and summaries to visualize spending distribution. A simple but functional CRUD project showcasing form handling, state management, and dynamic calculations in React.",
       "url": "gastos",
