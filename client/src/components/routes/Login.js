@@ -32,20 +32,16 @@ const Title = styled.h2`
 const Form = styled.form``
 
 const Input = styled.input`
+  box-sizing: border-box;
   width: 100%;
   padding: 0.75rem;
+  margin-bottom: 1rem;
   background-color: #374151;
   border-radius: 0.375rem;
   border: 1px solid #4b5563;
   color: #fff;
   outline: none;
-  &:focus {
-    box-shadow: 0 0 0 2px #3b82f6;
-  }
-`
-
-const InputWrapper = styled.div`
-  margin-bottom: 1rem;
+  &:focus { box-shadow: 0 0 0 2px #3b82f6; }
 `
 
 const ErrorText = styled.p`
@@ -55,6 +51,7 @@ const ErrorText = styled.p`
 `
 
 const Button = styled.button`
+  box-sizing: border-box;
   width: 100%;
   background-color: #2563eb;
   color: #fff;
@@ -64,15 +61,8 @@ const Button = styled.button`
   transition: 0.3s;
   cursor: pointer;
   border: none;
-
-  &:hover {
-    background-color: #1d4ed8;
-  }
-
-  &:disabled {
-    background-color: #6b7280;
-    cursor: not-allowed;
-  }
+  &:hover { background-color: #1d4ed8; }
+  &:disabled { background-color: #6b7280; cursor: not-allowed; }
 `
 
 const FooterText = styled.p`
@@ -141,26 +131,22 @@ const Login = () => {
       <Card>
         <Title>Login</Title>
         <Form onSubmit={handleSubmit}>
-          <InputWrapper>
-            <Input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </InputWrapper>
-          <InputWrapper>
-            <Input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
-          </InputWrapper>
+          <Input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+          <Input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
           {error && <ErrorText>{error}</ErrorText>}
           <Button type="submit" disabled={loading}>
             {loading ? 'Logging in...' : 'Login'}
