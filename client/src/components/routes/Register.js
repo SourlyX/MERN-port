@@ -1,105 +1,179 @@
 import React, { useState } from 'react'
+import styled from 'styled-components'
+
+const Container = styled.div`
+  min-height: 100vh;
+  background-color: #1f2937;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  width: 100%;
+`
+
+const Card = styled.div`
+  background-color: #1f2937;
+  padding: 2rem;
+  border-radius: 2rem;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 28rem;
+`
+
+const Title = styled.h2`
+  font-size: 1.875rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #fff;
+`
+
+const Form = styled.form``
+
+const Input = styled.input`
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #374151;
+  border-radius: 0.375rem;
+  border: 1px solid #4b5563;
+  color: #fff;
+  outline: none;
+  &:focus {
+    box-shadow: 0 0 0 2px #3b82f6;
+  }
+`
+
+const InputWrapper = styled.div`
+  margin-bottom: 1rem;
+`
+
+const ErrorText = styled.p`
+  color: #f87171;
+  text-align: center;
+  margin-bottom: 1rem;
+`
+
+const Button = styled.button`
+  width: 100%;
+  background-color: #2563eb;
+  color: #fff;
+  font-weight: bold;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  transition: 0.3s;
+  cursor: pointer;
+  border: none;
+
+  &:hover {
+    background-color: #1d4ed8;
+  }
+
+  &:disabled {
+    background-color: #6b7280;
+    cursor: not-allowed;
+  }
+`
+
+const FooterText = styled.p`
+  text-align: center;
+  color: #9ca3af;
+  margin-top: 1.5rem;
+`
+
+const FooterLink = styled.a`
+  color: #60a5fa;
+  text-decoration: none;
+  &:hover {
+    text-decoration: underline;
+  }
+`
 
 const Register = () => {
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-  });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({ username: '', email: '', password: '' })
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+    e.preventDefault()
+    setError('')
+    setLoading(true)
 
     try {
       const response = await fetch('/api/users/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
-      });
+        credentials: 'include' // buena práctica
+      })
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to register');
-      }
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.message || 'Failed to register')
 
-      console.log('Registration successful!', data.data);
-      alert('Registration successful! Please proceed to login.');
-      // Aquí podrías redirigir al usuario a la página de login
-      // ej: window.location.href = '/login';
+      alert('Registration successful! Please proceed to login.')
+      console.log('Registration successful!', data.data)
 
+      // OPCIONAL: si el backend devolviera accessToken, aquí lo guardarías
+      // localStorage.setItem('accessToken', data.data.accessToken)
+
+      // Redirigir manualmente al login
+      window.location.href = '/login'
     } catch (err) {
-      setError(err.message);
+      setError(err.message)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-      <div className="bg-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-md">
-        <h2 className="text-3xl font-bold text-center mb-6 text-white">Register</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <input
+    <Container>
+      <Card>
+        <Title>Register</Title>
+        <Form onSubmit={handleSubmit}>
+          <InputWrapper>
+            <Input
               type="text"
               name="username"
               placeholder="Username"
               value={formData.username}
               onChange={handleChange}
-              className="w-full p-3 bg-gray-700 rounded-md border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
               required
             />
-          </div>
-          <div className="mb-4">
-            <input
+          </InputWrapper>
+          <InputWrapper>
+            <Input
               type="email"
               name="email"
               placeholder="Email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full p-3 bg-gray-700 rounded-md border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
               required
             />
-          </div>
-          <div className="mb-6">
-            <input
+          </InputWrapper>
+          <InputWrapper style={{ marginBottom: '1.5rem' }}>
+            <Input
               type="password"
               name="password"
               placeholder="Password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full p-3 bg-gray-700 rounded-md border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
               required
             />
-          </div>
-          {error && <p className="text-red-400 text-center mb-4">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-md transition duration-300 disabled:bg-gray-500"
-          >
+          </InputWrapper>
+          {error && <ErrorText>{error}</ErrorText>}
+          <Button type="submit" disabled={loading}>
             {loading ? 'Registering...' : 'Register'}
-          </button>
-        </form>
-        <p className="text-center text-gray-400 mt-6">
-          Already have an account?{' '}
-          <a href="/login" className="text-blue-400 hover:underline">
-            Login here
-          </a>
-        </p>
-      </div>
-    </div>
-  );
+          </Button>
+        </Form>
+        <FooterText>
+          Already have an account? <FooterLink href="/login">Login here</FooterLink>
+        </FooterText>
+      </Card>
+    </Container>
+  )
 }
 
 export default Register

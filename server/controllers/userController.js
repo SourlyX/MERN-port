@@ -16,14 +16,14 @@ const registerUser = async (req, res) => {
     const { username, email, password } = req.body;
 
     if (!username || !email || !password) {
-      return res.status(400).json({ success: false, message: 'Por favor, completa todos los campos' });
+      return res.status(400).json({ success: false, message: 'Please fill out all the spaces' });
     }
 
     const userExists = await User.findOne({ email });
     const usernameExists = await User.findOne({ username });
 
     if (userExists || usernameExists) {
-      return res.status(400).json({ success: false, message: 'El email o nombre de usuario ya está en uso' });
+      return res.status(400).json({ success: false, message: 'The email or username is already in use' });
     }
 
     const user = new User({
@@ -36,7 +36,7 @@ const registerUser = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Usuario registrado exitosamente',
+      message: 'User registered successfully',
       data: {
         id: user._id,
         username: user.username,
@@ -46,7 +46,7 @@ const registerUser = async (req, res) => {
 
   } catch (error) {
     console.error('Error en registerUser:', error); // Log más descriptivo
-    res.status(500).json({ success: false, message: 'Error en el servidor' });
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
@@ -55,10 +55,10 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ success: false, message: 'Credenciales inválidas' });
+    if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials' });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ success: false, message: 'Credenciales inválidas' });
+    if (!isMatch) return res.status(401).json({ success: false, message: 'Invalid credentials' });
 
     const accessToken = generateAccessToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
@@ -73,7 +73,7 @@ const loginUser = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Login exitoso',
+      message: 'Login sucessful',
       data: {
         id: user._id,
         username: user.username,
@@ -87,7 +87,7 @@ const loginUser = async (req, res) => {
 
   } catch (error) {
     console.error('Error en loginUser:', error);
-    res.status(500).json({ success: false, message: 'Error en el servidor' });
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
@@ -109,7 +109,7 @@ const refreshToken = (req, res) => {
       accessToken: newAccessToken
     });
   } catch (error) {
-    return res.status(403).json({ success: false, message: 'Refresh token inválido o expirado' });
+    return res.status(403).json({ success: false, message: 'Invalid or expored refresh token' });
   }
 };
 
