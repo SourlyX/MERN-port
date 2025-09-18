@@ -1,10 +1,21 @@
 require('dotenv').config();
-
 const express = require('express');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
+const cors = require('cors')
 
 const app = express(); // <-- definir app primero
+
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://sourly.dev'
+]
+
+// Configuración CORS
+app.use(cors({
+  origin: allowedOrigins, // frontend
+  credentials: true                // permite cookies/headers auth
+}))
 
 const PORT = process.env.PORT || 5001;
 

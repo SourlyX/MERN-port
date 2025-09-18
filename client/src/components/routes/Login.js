@@ -108,14 +108,7 @@ const Login = () => {
 
       // Guardar access token y user
       localStorage.setItem('accessToken', data.data.accessToken)
-      localStorage.setItem(
-        'user',
-        JSON.stringify({
-          id: data.data.id,
-          username: data.data.username,
-          email: data.data.email,
-        })
-      )
+      localStorage.setItem('user', JSON.stringify(data.data))
 
       // Redirigir a proyectos
       navigate('/projects')

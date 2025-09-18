@@ -1,4 +1,4 @@
-import { createContext, useRef, useState, useEffect } from "react"
+import { useRef, useState } from "react"
 import { AuthProvider } from './context/AuthContext'
 import Navbar from "./components/Navbar"
 import Container from "./components/projects/Container"
@@ -30,19 +30,6 @@ const MainApp = styled.div`
 
 function App() {
   const contactRef = useRef(null)
-
-  const [income, setIncome] = useState([
-    { type: "Net Salary", amount: 0 },
-    { type: "Total", amount: 0 }
-  ])
-
-  const [expenses, setExpenses] = useState([
-    { type: "Dwelling", amount: 140000 },
-    { type: "Telephone Bill", amount: 44000 },
-    { type: "Internet Bill", amount: 29000 },
-    { type: "Education", amount: 27000 },
-    { type: "Total", amount: 240000 }
-  ])
 
   const [todos, setTodos] = useState([
     { name: "Something", active: true },
@@ -99,7 +86,7 @@ function App() {
           <Route path="/projects/pokedex" element={<Pokedex />} />
           <Route
             path="/projects/gastos"
-            element={<Expenses income={income} setIncome={setIncome} expenses={expenses} setExpenses={setExpenses} />}
+            element={<Expenses/>}
           />
 
           <Route path="/login" element={<Login />} />

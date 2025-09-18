@@ -82,7 +82,7 @@ const Tables = ({ income, expenses, handleDelete }) =>{
                     </TableCell>
                   </TableRow>
 
-                {target.breakDown.map((item, idx) => (
+                {target.breakDown && target.breakDown.map((item, idx) => (
                   <TableRow key={idx}>
                     <TableCell style={{ paddingLeft: '30px', color: '#b0bec5' }}>{item.label}</TableCell>
                     <TableCell style={{ textAlign: 'right', color: '#b0bec5' }}>{"₡" + parseFloat(item.amount).toFixed(2)}</TableCell>

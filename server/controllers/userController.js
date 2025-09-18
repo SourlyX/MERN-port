@@ -30,7 +30,26 @@ const registerUser = async (req, res) => {
       username,
       email,
       password,
+      incomes: [
+        {
+          type: "Net Salary",
+          amount: 0,
+          breakDown: []
+        },
+        {
+          type: "Total",
+          amount: 0,
+        }
+      ],
+      expenses: [
+        {
+          type: "Total",
+          amount: 0,
+        }
+      ],
+      todos: []
     });
+
 
     await user.save();
 
@@ -113,9 +132,42 @@ const refreshToken = (req, res) => {
   }
 };
 
-// Asegúrate que ambas funciones estén definidas ANTES de exportarlas.
+const updateUserData = async (req, res) => {
+  try {
+    const { incomes, expenses } = req.body
+
+    const user = await User.findById(req.user._id)
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    if (incomes) user.incomes = incomes
+    if (expenses) user.expenses = expenses
+
+    await user.save()
+
+    res.status(200).json({
+      success: true,
+      message: 'User data updated',
+      data: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        incomes: user.incomes,
+        expenses: user.expenses,
+        todos: user.todos
+      }
+    })
+  } catch (error) {
+    console.error('Error updating user:', error)
+    res.status(500).json({ success: false, message: 'Server error' })
+  }
+}
+
 module.exports = {
   registerUser,
   loginUser,
-  refreshToken
-};
+  refreshToken,
+  updateUserData
+}

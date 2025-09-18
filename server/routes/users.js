@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const { protect } = require('../middleware/protect')
+const { updateUserData } = require('../controllers/userController')
 
 const { registerUser, loginUser, refreshToken } = require('../controllers/userController'); 
 
@@ -17,5 +19,10 @@ router.post('/login', loginUser);
 // @route   POST /api/users/refresh
 // @access  Public
 router.post('/refresh', refreshToken);
+
+// @desc    Actualizar incomes y expenses de usuario loggeado
+// @route   PUT /api/users/update
+// @access  Private
+router.put('/update', protect, updateUserData)
 
 module.exports = router;
