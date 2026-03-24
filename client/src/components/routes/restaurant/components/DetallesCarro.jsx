@@ -94,7 +94,7 @@ const DetallesCarro = ({ carro, removeFromCart, emptyCart }) => {
       <ListaProductos>
         {carro.map(item => (
           <ProductoItem key={item[0].numero}>
-            <img alt={item[0].name} src={`${process.env.PUBLIC_URL}/${item[0].img}`} width="50" />
+            <img alt={item[0].name} src={`/${item[0].img}`} width="50" />
             <div>
               {item[0].name}
               {item[1].map(item => (

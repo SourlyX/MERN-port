@@ -85,7 +85,7 @@ function App() {
           <Route path="/projects/restaurant" element={<Restarurante />} />
           <Route path="/projects/pokedex" element={<Pokedex />} />
           <Route
-            path="/projects/gastos"
+            path="/projects/incomes&expenses"
             element={<Expenses/>}
           />
 

@@ -41,6 +41,18 @@ const todoSchema = new mongoose.Schema({
   }
 });
 
+const payInfoSchema = new mongoose.Schema({
+  payType: {
+    type: String,
+    enum: ['Monthly', 'Biweekly', 'Weekly'],
+    default: 'Biweekly'
+  },
+  paymentDates: {
+    type: [Date],
+    default: []
+  }
+});
+
 // 3. EL Esquema del USUARIO
 const userSchema = new mongoose.Schema({
   username: {
@@ -61,7 +73,8 @@ const userSchema = new mongoose.Schema({
   },
   incomes: [transactionSchema],
   expenses: [transactionSchema],
-  todos: [todoSchema]
+  todos: [todoSchema],
+  payInfo: payInfoSchema,
 });
 
 userSchema.pre('save', async function(next) {

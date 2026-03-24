@@ -90,21 +90,21 @@
     {
       "image": "images/projects/development.jpeg",
       "title": "Recipes App",
-      "description": "This project is a Pokédex-style app built with React that uses the PokéAPI to display detailed information about various Pokémon. Users can browse, search, and explore stats, abilities, and types for each Pokémon in a responsive and visually appealing interface. The app focuses entirely on front-end functionality, fetching data dynamically from the API. It showcases my ability to work with external APIs and create interactive user experiences.",
+      "description": "A web application that displays a collection of predefined recipes. Each recipe has its own detail view with ingredients and instructions, and users can mark favorites for quick access. Built with reusable card-based components and simple navigation to provide a clean and intuitive experience.",
       "url": "recetas",
       "inDevelopment": true
     },
     {
-      "image": "images/projects/incomes&expenses.png",
+      "image": "images/projects/income&expense.png",
       "title": "Income & Expense Tracker",
       "description": "A lightweight application that allows users to record expenses by category, amount, and date. The data updates dynamically, displaying totals and summaries to visualize spending distribution. A simple but functional CRUD project showcasing form handling, state management, and dynamic calculations in React.",
-      "url": "gastos",
+      "url": "incomes&expenses",
       "inDevelopment": false
     },
     {
       "image": "images/projects/development.jpeg",
       "title": "Sticky Notes",
-      "description": "This project is a Pokédex-style app built with React that uses the PokéAPI to display detailed information about various Pokémon. Users can browse, search, and explore stats, abilities, and types for each Pokémon in a responsive and visually appealing interface. The app focuses entirely on front-end functionality, fetching data dynamically from the API. It showcases my ability to work with external APIs and create interactive user experiences.",
+      "description": "An interactive note-taking app where users can create, customize, and delete notes. Each note can be assigned a different color, offering both visual appeal and better organization. This project highlights interactivity, visual design, and state management through dynamic components.",
       "url": "notas",
       "inDevelopment": true
     }

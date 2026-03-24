@@ -10,7 +10,7 @@ const generateRefreshToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '30d' });
 };
 
-// @desc    Función para registrar un nuevo usuario
+// @desc    Registrar un nuevo usuario
 const registerUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -47,9 +47,12 @@ const registerUser = async (req, res) => {
           amount: 0,
         }
       ],
-      todos: []
+      todos: [],
+      payInfo: {
+        payType: 'Biweekly',
+        paymentDates: []
+      }
     });
-
 
     await user.save();
 
@@ -64,12 +67,12 @@ const registerUser = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error en registerUser:', error); // Log más descriptivo
+    console.error('Error en registerUser:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
-// @desc    Función para autenticar un usuario
+// @desc    Autenticar un usuario
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -82,17 +85,16 @@ const loginUser = async (req, res) => {
     const accessToken = generateAccessToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
 
-    // Guardar refresh token en cookie HttpOnly
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'Strict',
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 días
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
     res.status(200).json({
       success: true,
-      message: 'Login sucessful',
+      message: 'Login successful',
       data: {
         id: user._id,
         username: user.username,
@@ -110,9 +112,7 @@ const loginUser = async (req, res) => {
   }
 };
 
-// @desc    Renovar access token usando refresh token (cookie)
-// @route   POST /api/users/refresh
-// @access  Public
+// @desc    Renovar access token usando refresh token
 const refreshToken = (req, res) => {
   const token = req.cookies.refreshToken;
   if (!token) {
@@ -128,46 +128,39 @@ const refreshToken = (req, res) => {
       accessToken: newAccessToken
     });
   } catch (error) {
-    return res.status(403).json({ success: false, message: 'Invalid or expored refresh token' });
+    return res.status(403).json({ success: false, message: 'Invalid or expired refresh token' });
   }
 };
 
+// @desc    Actualizar datos del usuario
 const updateUserData = async (req, res) => {
   try {
-    const { incomes, expenses } = req.body
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
 
-    const user = await User.findById(req.user._id)
+    const { incomes, expenses, payInfo } = req.body;
 
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' })
-    }
+    if (Array.isArray(incomes)) user.incomes = incomes;
+    if (Array.isArray(expenses)) user.expenses = expenses;
+    if (payInfo) user.payInfo = payInfo;
 
-    if (incomes) user.incomes = incomes
-    if (expenses) user.expenses = expenses
+    const updatedUserDoc = await user.save();
 
-    await user.save()
-
-    res.status(200).json({
+    const { password, __v, ...safeUser } = updatedUserDoc.toObject();
+    return res.json({
       success: true,
-      message: 'User data updated',
-      data: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        incomes: user.incomes,
-        expenses: user.expenses,
-        todos: user.todos
-      }
-    })
+      message: 'Usuario actualizado',
+      data: safeUser
+    });
   } catch (error) {
-    console.error('Error updating user:', error)
-    res.status(500).json({ success: false, message: 'Server error' })
+    console.error(error);
+    res.status(500).json({ message: 'Error al actualizar usuario' });
   }
-}
+};
 
 module.exports = {
   registerUser,
   loginUser,
   refreshToken,
   updateUserData
-}
+};

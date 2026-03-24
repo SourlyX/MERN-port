@@ -36,7 +36,7 @@ const SaveButton = styled.button`
 `
 
 const Expenses = () => {
-  const { user, isAuthenticated, updateUser } = useContext(AuthContext)
+  const { user, isAuthenticated, updateUser, addPayInfo } = useContext(AuthContext)
 
   const incomeOptions = ["Choose one type of income", "Dividend", "Sells", "Services", "Extra", "Other"]
   const expenseOptions = ["Choose one type of expense", "Dwelling", "Telephone Bill", "Internet Bill", "Water Bill",
@@ -65,19 +65,27 @@ const Expenses = () => {
     }
   }, [isAuthenticated, user])
 
-  const saveChanges = async () => {
-    try {
-      const token = localStorage.getItem('accessToken')
-      const updatedUser = await updateUserData(token, income, expenses)
+const saveChanges = async () => {
+  try {
+    const token = localStorage.getItem('accessToken')
 
-      // actualizar estado global (AuthContext)
-      updateUser(updatedUser)
-      console.log("Changes saved")
-    } catch (err) {
-      console.error(err)
+    // juntar todo
+    const payload = {
+      incomes: income,
+      expenses: expenses,
+      payInfo: [{ payType, paymentDates }]
     }
-  }
 
+    // nueva API que actualiza todo el usuario
+    const updatedUser = await updateUserData(token, payload)
+
+    // actualizar contexto global
+    updateUser(updatedUser)
+    console.log("Changes saved")
+  } catch (err) {
+    console.error(err)
+  }
+}
 
   const [newIncome, setNewIncome] = useState()
   const [incomeType, setIncomeType] = useState(incomeOptions[0])

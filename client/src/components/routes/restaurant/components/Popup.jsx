@@ -122,7 +122,7 @@ const Popup = ({ producto, guarniciones, terminosCarne, addToCart, rerenderParen
         <img
           className="img"
           alt={producto.name}
-          src={`${process.env.PUBLIC_URL}/${producto.img}`}
+          src={`/${producto.img}`}
         />
         <h2>{producto.name}</h2>
         <form onSubmit={submit}>

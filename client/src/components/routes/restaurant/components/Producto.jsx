@@ -66,7 +66,7 @@ const Producto = ({
       {producto.cantidadRestante !== 0 ? (
         <ProductoImg
           alt={producto.name}
-          src={`${process.env.PUBLIC_URL}/${producto.img}`} // Ruta de imagen corregida
+          src={`/${producto.img}`} // Ruta de imagen corregida
           onClick={() => onProductoClick(producto)} // Notifica al padre
           ref={imgRef}
         />
@@ -75,7 +75,7 @@ const Producto = ({
           <ProductoImg 
             className="grayout" 
             alt={producto.name} 
-            src={`${process.env.PUBLIC_URL}/${producto.img}`} 
+            src={`/${producto.img}`} 
           />
           <label>Agotado</label>
         </Posicion>
