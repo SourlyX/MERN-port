@@ -2,14 +2,12 @@ import React from "react"
 import styled from "styled-components"
 
 const Container = styled.div`
+  margin: 10px 0;
   display: flex;
   flex-direction: row;
   align-items: center;
   width:100%;
   justify-content: space-between;
-`
-
-const Name = styled.p`
 `
 
 const Bar = styled.div`
@@ -30,7 +28,7 @@ const Progress = styled.div`
 const ProgressBar = ({ name, progress }) => {
   return (
     <Container>
-      <Name>{name}: </Name>
+      <p>{name}: </p>
       <Bar><Progress progress={progress}/></Bar>
     </Container>
   )

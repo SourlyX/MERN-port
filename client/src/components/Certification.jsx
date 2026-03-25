@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import styled, { keyframes } from 'styled-components'
 
 const CertificationContainer = styled.div`
@@ -19,10 +19,19 @@ const CertificationContainer = styled.div`
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.3s, background-color 0.3s;
-  
+
   &:hover {
     transform: scale(1.05);
     background-color: #3E4A5B;
+  }
+
+  @media (max-width: 768px) {
+    width: 45%;
+    max-width: 45%;
+    &:active {
+      transform: scale(1.05);
+      background-color: #3E4A5B;
+  }
   }
 `
 
@@ -84,8 +93,12 @@ const Certification = ({ title, company, date, credentialId, imagePath }) => {
     setShowImage(false)
   }
 
+  const handleToggle = () => {
+    setShowImage(!showImage)
+  }
+
   return (
-    <CertificationContainer onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+    <CertificationContainer onClick={handleToggle}>
       {!showImage && (
         <>
           <Title>{title}</Title>

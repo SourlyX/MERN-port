@@ -1,5 +1,4 @@
 import Button from "../Button"
-import React from 'react'
 import styled from 'styled-components'
 
 const LandingPageContainer = styled.div`
@@ -53,6 +52,10 @@ const Introduction = styled.p`
   max-width: 600px;
   line-height: 1.5;
   margin: 0 20px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 150px;
+  }
 `
 
 const LandingPage = () => {

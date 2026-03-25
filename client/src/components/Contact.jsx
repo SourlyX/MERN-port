@@ -7,7 +7,6 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
   display: flex;
-  border-top: 2px solid #55F5ED;
 `
 
 const ContactContainer = styled.div`

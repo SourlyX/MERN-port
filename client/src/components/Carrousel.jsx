@@ -2,30 +2,41 @@ import React, { useState, useEffect } from "react"
 import Cards from "./Cards"
 import styled from "styled-components"
 
-const CarrouselCards = styled.div`
-  width: 40%;
+const CarrouselContainer = styled.div`
+  border-bottom: 2px solid #55F5ED;
+  width: 95%;
+  padding-bottom: 30px;
+  box-sizing: border-box;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
 `
 
+const CarrouselCards = styled.div`
+width: 40 %;
+display: flex;
+align - items: center;
+justify - content: center;
+`
+
 const Button = styled.button`
-  background-color: #4DB6AC;
-  color: #E0E0E0;
-  border: none;
-  padding: 10px 16px;
-  font-size: 1.2rem;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: background-color 0.3s ease;
+background - color: #4DB6AC;
+color: #E0E0E0;
+border: none;
+padding: 10px 16px;
+font - size: 1.2rem;
+cursor: pointer;
+border - radius: 8px;
+transition: background - color 0.3s ease;
 
   &:hover {
-    background-color: #3AA298; /* un turquesa más oscuro */
-  }
+  background - color: #3AA298; /* un turquesa más oscuro */
+}
 
   &:active {
-    transform: scale(0.95);
-  }
+  transform: scale(0.95);
+}
 `
 
 const Carrousel = ({ cards }) => {
@@ -56,25 +67,25 @@ const Carrousel = ({ cards }) => {
   }, [actualCard])
 
   return (
-    <div style={{ display:'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <CarrouselContainer>
       <Button onClick={() => move(false)}>{"<"}</Button>
       <CarrouselCards style={{ opacity: fade ? 1 : 0, transition: 'opacity 0.5s' }}>
         {cards.map((card, index) => (
           index === actualCard ?
-          <Cards
-            key={index}
-            title={card.title}
-            description={card.description}
-            image={card.image}
-            url={card.url}
-            inDevelopment={card.inDevelopment}
-            fullWidth={true}
-          />
-          : null
+            <Cards
+              key={index}
+              title={card.title}
+              description={card.description}
+              image={card.image}
+              url={card.url}
+              inDevelopment={card.inDevelopment}
+              fullWidth={true}
+            />
+            : null
         ))}
       </CarrouselCards>
       <Button onClick={() => move(true)}>{">"}</Button>
-    </div>
+    </CarrouselContainer>
   )
 }
 

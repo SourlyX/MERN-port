@@ -1,5 +1,4 @@
 import React from "react"
-import { list } from "postcss"
 import styled from "styled-components"
 
 const TablesContainer = styled.div`
@@ -57,110 +56,131 @@ const Bin = styled.img`
   }
 `
 
-const Tables = ({ income, expenses, handleDelete }) =>{
+const Tables = ({ income, expenses, handleDelete }) => {
   return (
     <>
-    <TablesContainer>
-      <TableContainer>
-        <h1 style={{ textAlign: "center" }}>Incomes</h1>
-        <StyledTable>
-          <TableHeader>
-            <TableRow>
-              <TableCell>Income types</TableCell>
-              <TableCell>Amout</TableCell>
-            </TableRow>
-          </TableHeader>
-          <tbody>
-          {income.map((target) => {
-            if (target.type === "Net Salary" && target.breakDown) {
-              return (
-                <React.Fragment key={target.type}>
-                  <TableRow>
-                    <TableCell><strong>Net Salary</strong></TableCell>
-                    <TableCell style={{ textAlign: 'right' }}>
-                      <strong>{"₡" + parseFloat(target.amount).toFixed(2)}</strong>
-                    </TableCell>
-                  </TableRow>
+      <TablesContainer>
+        <TableContainer>
+          <h1 style={{ textAlign: "center" }}>Incomes</h1>
+          <StyledTable>
+            <TableHeader>
+              <TableRow>
+                <TableCell>Income types</TableCell>
+                <TableCell>Amout</TableCell>
+              </TableRow>
+            </TableHeader>
+            <tbody>
+              {income.map((target) => {
+                if (target.type === "Net Salary" && target.breakDown) {
+                  return (
+                    <React.Fragment key={target.type}>
+                      <TableRow>
+                        <TableCell><strong>Net Salary</strong></TableCell>
+                        <TableCell style={{ textAlign: 'right' }}>
+                          <strong>{"₡" + parseFloat(target.amount).toFixed(2)}</strong>
+                        </TableCell>
+                      </TableRow>
 
-                {target.breakDown && target.breakDown.map((item, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell style={{ paddingLeft: '30px', color: '#b0bec5' }}>{item.label}</TableCell>
-                    <TableCell style={{ textAlign: 'right', color: '#b0bec5' }}>{"₡" + parseFloat(item.amount).toFixed(2)}</TableCell>
+                      {target.breakDown && target.breakDown.map((item, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell style={{ paddingLeft: '30px', color: '#b0bec5' }}>{item.label}</TableCell>
+                          <TableCell style={{ textAlign: 'right', color: '#b0bec5' }}>{"₡" + parseFloat(item.amount).toFixed(2)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </React.Fragment>
+                  )
+                }
+
+                if (target.type === "Total") {
+                  return (
+                    <TableRow key={target.type}>
+                      <TableCell><strong>{target.type}</strong></TableCell>
+                      <TableCell style={{ textAlign: 'right' }}><strong>{"₡" + target.amount}</strong></TableCell>
+                    </TableRow>
+                  )
+                }
+
+                return (
+                  <TableRow key={target.type}>
+                    <TableCell>{target.type}</TableCell>
+                    <TableCell
+                      style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center"
+                      }}>{"₡" + target.amount}
+                      <Bin
+                        src={`/productos/garbage.png`}
+                        alt="Garbage Icon"
+                        onClick={() => handleDelete(expenses, target)}
+                      /></TableCell>
                   </TableRow>
-                ))}
-                </React.Fragment>
-              )
-            }
-              return (
-                <TableRow key={target.type}>
+                )
+              })}
+            </tbody>
+          </StyledTable>
+        </TableContainer>
+
+        <TableContainer>
+          <h1 style={{ textAlign: "center" }}>Expenses</h1>
+          <StyledTable>
+            <TableHeader>
+              <TableRow>
+                <TableCell>Expense types</TableCell>
+                <TableCell>Amount</TableCell>
+              </TableRow>
+            </TableHeader>
+            <tbody>
+              {expenses.map((target) => (
+                <TableRow key={`${target.type}-${target.amount}`}>
                   <TableCell>{target.type}</TableCell>
-                  <TableCell style={{ textAlign: 'right' }}>{"₡" + target.amount}</TableCell>
+                  <TableCell
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center"
+                    }}>{"₡" + target.amount}
+                    {(target.type !== "Total" && target.type !== "Salary") && (
+                      <Bin
+                        src={`/productos/garbage.png`}
+                        alt="Garbage Icon"
+                        onClick={() => handleDelete(expenses, target)}
+                      />
+                    )}</TableCell>
                 </TableRow>
-              )
-          })}
-          </tbody>
-        </StyledTable>
-      </TableContainer>
+              ))}
+            </tbody>
+          </StyledTable>
+        </TableContainer>
+      </TablesContainer>
 
       <TableContainer>
-        <h1 style={{ textAlign: "center" }}>Expenses</h1>
+        <h1 style={{ textAlign: "center" }}>Financial Overview</h1>
         <StyledTable>
           <TableHeader>
             <TableRow>
-              <TableCell>Expense types</TableCell>
+              <TableCell>Movements</TableCell>
               <TableCell>Amount</TableCell>
             </TableRow>
           </TableHeader>
-            <tbody>
-            {expenses.map((target) => (
-              <TableRow key={`${target.type}-${target.amount}`}>
-                <TableCell>{target.type}</TableCell>
-                <TableCell 
-                style={{ 
-                  display: "flex", 
-                  flexDirection: "row", 
-                  justifyContent: "space-between", 
-                  alignItems: "center" 
-                }}>{"₡" + target.amount}
-                {(target.type !== "Total" && target.type !=="Salary") && (
-                  <Bin
-                    src={`/productos/garbage.png`}
-                    alt="Garbage Icon"
-                    onClick={() => handleDelete(expenses, target)}
-                    />
-                  )}</TableCell>
-              </TableRow>
-            ))}
-            </tbody>
+          <tbody>
+            <TableRow>
+              <TableCell>Incomes</TableCell>
+              <TableCell>{"₡" + income.at(-1).amount}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Expenses</TableCell>
+              <TableCell>{"₡" + expenses.at(-1).amount}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Total</TableCell>
+              <TableCell>{"₡" + (income.at(-1).amount - expenses.at(-1).amount).toString()}</TableCell>
+            </TableRow>
+          </tbody>
         </StyledTable>
       </TableContainer>
-    </TablesContainer>
-
-    <TableContainer>
-      <h1 style={{ textAlign: "center" }}>Financial Overview</h1>
-      <StyledTable>
-        <TableHeader>
-          <TableRow>
-            <TableCell>Movements</TableCell>
-            <TableCell>Amount</TableCell>
-          </TableRow>
-        </TableHeader>
-        <tbody>
-        <TableRow>
-          <TableCell>Incomes</TableCell>
-          <TableCell>{"₡" + income.at(-1).amount}</TableCell>
-        </TableRow>
-        <TableRow>
-          <TableCell>Expenses</TableCell>
-          <TableCell>{"₡" + expenses.at(-1).amount}</TableCell>
-        </TableRow>
-        <TableRow>
-          <TableCell>Total</TableCell>
-          <TableCell>{"₡" + (income.at(-1).amount-expenses.at(-1).amount).toString()}</TableCell>
-        </TableRow>
-        </tbody>
-      </StyledTable>
-    </TableContainer>
     </>
   )
 }

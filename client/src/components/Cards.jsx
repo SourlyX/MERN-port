@@ -15,7 +15,7 @@ const StyledCard = styled.div`
   flex-basis: auto;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: space-around;
   position: relative;
   transition: opacity 0.3s;
   z-index: 1;
@@ -32,7 +32,7 @@ const StyledCard = styled.div`
   }
 
   @media (max-width: 768px) {
-    width: 100% ;
+    width: 90% ;
     padding: 2px;
     margin-top: 5px;
     margin-bottom: 5px;
@@ -70,6 +70,10 @@ const CardImage = styled.img`
   max-width: 125px;
   height: auto;
   border-radius: 8px;
+
+  @media (max-width: 768px) {
+    margin: 1px 0;
+  }
 `
 
 const CardTitle = styled.h3`
@@ -79,13 +83,14 @@ const CardTitle = styled.h3`
 `
 
 const CardDescription = styled.div`
-  max-width: 75%;
+  max-width: 70%;
   display: flex;
+  text-align: center;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 20px;
   color: #E0E0E0;
+  margin: 5px 0;
 `
 
 function Cards({ title, description, image, url, inDevelopment, text, fullwidth }) {

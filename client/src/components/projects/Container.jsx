@@ -1,4 +1,3 @@
-import React from 'react'
 import styled from 'styled-components'
 import Cards from '../Cards'
 
@@ -7,6 +6,7 @@ const CardContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
   border-bottom: 2px solid #3B3F46;
   width: 90%;
   padding: 20px;
@@ -32,7 +32,7 @@ const Title = styled.h1`
 
 function Container({ cards, title, text }) {
   return (
-    <>
+    <div style={{ borderBottom: "2px solid #55F5ED" }}>
       <Title>{title}</Title>
       <CardContainer>
         {cards.map((card, index) => (
@@ -47,7 +47,7 @@ function Container({ cards, title, text }) {
           />
         ))}
       </CardContainer>
-    </>
+    </div>
   )
 }
 

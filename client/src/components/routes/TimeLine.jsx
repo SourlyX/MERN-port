@@ -1,12 +1,21 @@
 import React from "react"
 import styled, { css } from "styled-components"
 
+const TimelineWrapper = styled.div`
+  width: 95vw;
+  border-bottom: 2px solid #55f5ED;
+  padding-bottom: 30px;
+  box-sizing: border-box;
+`
+
 const Timeline = styled.section`
+  width: 100%;
   white-space: nowrap;
-  overflow-x: hidden;
+  overflow-x: auto;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   position: relative;
+  margin-bottom: 40px;
 
   ol {
     font-size: 0;
@@ -19,7 +28,7 @@ const Timeline = styled.section`
     &::after {
       content: '';
       display: inline-block;
-      width: 280px; /* mismo ancho del último div */
+      width: 280px;
       flex-shrink: 0;
     }
   }
@@ -118,28 +127,21 @@ const Arrow = styled.button`
 `
 
 const TimeLine = ({ timestamps }) => {
-return (
+  return (
+    <TimelineWrapper>
       <Timeline>
         <ol>
           {timestamps.map((time, index) => (
             <li key={index}>
-            <div>
-              <time>{time.time}</time>
-              <br/><p>{time.description}</p>
-            </div>
+              <div>
+                <time>{time.time}</time>
+                <br /><p>{time.description}</p>
+              </div>
             </li>
           ))}
         </ol>
-
-        {/*<Arrows>
-          <Arrow prev disabled>
-            <img src="arrowPrev.svg" alt="prev arrow"/>
-          </Arrow>
-          <Arrow>
-            <img src="arrowNext.svg" alt="next arrow"/>
-          </Arrow>
-        </Arrows>*/}
       </Timeline>
+    </TimelineWrapper>
   )
 }
 

@@ -1,4 +1,3 @@
-import React from "react"
 import styled from "styled-components"
 import Certification from "../Certification"
 import TimeLine from "./TimeLine"
@@ -7,21 +6,11 @@ import Carrousel from "../Carrousel"
 import ProgressBar from "../ProgressBar"
 import data from "../../data.json"
 
-const StyledLink = styled.a`
-  color: #007bff;
-  text-decoration: underline;
-  font-size: 1rem;
-  font-weight: normal;
-  cursor: pointer;
-  transition: color 0.3s;
-
-  &:hover {
-    color: #0056b3;
-  }
-`
-
 const AboutPageContainer = styled.div`
-  padding: 20px;
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   height: auto;
   color: #E0E0E0;
 `
@@ -36,27 +25,15 @@ const Cert = styled.div`
 `
 
 const SectionTitle = styled.h2`
+  margin-top: 40px;
   font-size: 28px;
   margin-bottom: 15px;
-  border-bottom: 2px solid #55F5ED;
   padding-bottom: 5px;
   color: #55F5ED;
 `
 
-const SectionText = styled.p`
-  margin-top: 16px;
-  margin-bottom: 5rem;
-  line-height: 1.6;
-  color: white;
-  font-size: 1rem;
-  text-align: justify;
-  @media (max-width: 768px) {
-    font-size: 0.9rem;
-    margin-top: 12px;
-  }
-`
-
 const Grid = styled.section`
+  width: 100%;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
@@ -87,53 +64,86 @@ const AboutPage = () => {
     <AboutPageContainer>
       <h1 style={{ fontSize: '3rem' }}>About Me</h1>
       <SectionTitle>Brief Introduction</SectionTitle>
-        <Container cards={data.introCards}/>
+      <Container cards={data.introCards} />
       <SectionTitle>Professional Experience</SectionTitle>
-        <TimeLine timestamps={data.ProfessionalExperience}/>
+      <TimeLine timestamps={data.ProfessionalExperience} />
       <SectionTitle>Education</SectionTitle>
-        <ul>
+      <div
+        style={{
+          borderBottom: "2px solid #55F5ED",
+          width: "95%",
+          paddingBottom: "30px",
+          boxSizing: "border-box"
+        }}
+      >
+        <ul >
           <li>🏫 Bachelor's degree in high school education at "Liceo de Curridabat". 🧠</li>
           <li>🎓 Diploma in Computer Science · UNED · Currently studying. 📜</li>
           <li>📚 I have completed several online courses and certifications in various programming languages and technologies, which can be found bellow. 🖥️</li>
         </ul>
-       <SectionTitle>Certifications</SectionTitle>
-       <Cert>
-       {data.certificationsData.map((certification, index) => (
-         <Certification
-           key={index}
-           title={certification.title}
-           company={certification.company}
-           date={certification.date}
-           credentialId={certification.credentialId}
-           imagePath={certification.imagePath}
-           skills={certification.skills}
-         />
-       ))}</Cert>
-       <SectionTitle>Skills</SectionTitle>
+      </div>
+      <SectionTitle>Certifications</SectionTitle>
+      <div
+        style={{
+          borderBottom: "2px solid #55F5ED",
+          width: "95%",
+          paddingBottom: "30px",
+          boxSizing: "border-box"
+        }}>
+        <Cert>
+          {data.certificationsData.map((certification, index) => (
+            <Certification
+              key={index}
+              title={certification.title}
+              company={certification.company}
+              date={certification.date}
+              credentialId={certification.credentialId}
+              imagePath={certification.imagePath}
+              skills={certification.skills}
+            />
+          ))}</Cert>
+      </div>
+      <SectionTitle>Skills</SectionTitle>
+      <div
+        style={{
+          borderBottom: "2px solid #55F5ED",
+          width: "95%",
+          paddingBottom: "30px",
+          boxSizing: "border-box"
+        }}>
         <Grid>
           {data.skills.map(s => (
             <Card key={s.name} aria-label={s.name}>
-            <Icon src={s.icon} alt={s.name} />
-            <div>
-              <strong>{s.title}</strong>
-              <div style={{fontSize:12, opacity:0.8, display:'inline-block' }}>{s.description}</div>
-            </div>
+              <Icon src={s.icon} alt={s.name} />
+              <div>
+                <strong>{s.title}</strong>
+                <div style={{ fontSize: 12, opacity: 0.8, display: 'inline-block' }}>{s.description}</div>
+              </div>
             </Card>
           ))}
         </Grid>
+      </div>
       <SectionTitle>Interests</SectionTitle>
-      <Carrousel cards={data.interestsCards}/>
+      <Carrousel cards={data.interestsCards} />
       <SectionTitle>Professional Goals</SectionTitle>
-        <TimeLine timestamps={data.ProfessionalGoals}/>
+      <TimeLine timestamps={data.ProfessionalGoals} />
       <SectionTitle>Languages</SectionTitle>
-      {data.Languages.map((language, index) => (
-        <ProgressBar
-          key={index}
-          name={language.name}
-          progress={language.progress}
-        />
-      ))}
-   </AboutPageContainer>
+      <div
+        style={{
+          borderBottom: "2px solid #55F5ED",
+          width: "95%",
+          paddingBottom: "30px",
+          boxSizing: "border-box"
+        }}>
+        {data.Languages.map((language, index) => (
+          <ProgressBar
+            key={index}
+            name={language.name}
+            progress={language.progress}
+          />
+        ))}
+      </div>
+    </AboutPageContainer>
   )
 }
 
