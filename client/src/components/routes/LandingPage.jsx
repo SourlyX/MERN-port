@@ -1,3 +1,5 @@
+import { useContext } from 'react'
+import { AuthContext } from '../../context/AuthContext'
 import Button from "../Button"
 import styled from 'styled-components'
 
@@ -16,6 +18,20 @@ const LandingPageContainer = styled.div`
   @media (max-width: 768px) {
     width: 100%;
     padding: 0;
+  }
+`
+
+const WelcomeMessage = styled.h1`
+  font-size: 3rem;
+  color: gray;
+  font-style: italic;
+  margin-bottom: 20px;
+  align-self: flex-start;
+  margin-left: 1rem;
+
+  @media (max-width: 768px) {
+    font-size: 1.8rem;
+    margin-left: 0.5rem;
   }
 `
 
@@ -59,11 +75,14 @@ const Introduction = styled.p`
 `
 
 const LandingPage = () => {
+  const { user, isAuthenticated } = useContext(AuthContext)
   const fileUrl = "/CV-LuisUrena.pdf"
   const buttonText = "Download CV"
 
   return (
     <LandingPageContainer>
+      {isAuthenticated ? (<WelcomeMessage>Hey, {user.username}!</WelcomeMessage>
+      ) : null}
       <ButtonContainer>
         <Button text={buttonText} filePath={fileUrl} />
       </ButtonContainer>

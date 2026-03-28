@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import styled from 'styled-components'
 
 const Container = styled.div`
@@ -78,7 +78,7 @@ const FooterLink = styled.a`
   }
 `
 
-const Register = () => {
+const Register = ({ toastVisibility, setMessage }) => {
   const [formData, setFormData] = useState({ username: '', email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -103,8 +103,8 @@ const Register = () => {
       const data = await response.json()
       if (!response.ok) throw new Error(data.message || 'Failed to register')
 
-      alert('Registration successful! Please proceed to login.')
-      console.log('Registration successful!', data.data)
+      setMessage('Registration successful! Please log in.')
+      toastVisibility(true)
 
       // OPCIONAL: si el backend devolviera accessToken, aquí lo guardarías
       // localStorage.setItem('accessToken', data.data.accessToken)

@@ -16,6 +16,7 @@ import Expenses from "./components/projects/expenses/Expenses"
 import Login from "./components/routes/Login"
 import Register from "./components/routes/Register"
 import data from "./data.json"
+import Toast from "./components/Toast"
 import "./index.css"
 import { HelmetProvider } from "react-helmet-async"
 import { Routes, Route } from "react-router-dom"
@@ -31,6 +32,8 @@ const MainApp = styled.div`
 function App() {
   const contactRef = useRef(null)
 
+  const [toastVisibility, setToastVisibility] = useState(false)
+  const [toastMessage, setToastMessage] = useState("")
   const [todos, setTodos] = useState([
     { name: "Something", active: true },
     { name: "Something 2", active: true },
@@ -57,7 +60,10 @@ function App() {
           />
         </HelmetProvider>
 
-        <Navbar items={data.navbarItems} contactRef={contactRef} />
+        <Navbar items={data.navbarItems}
+          contactRef={contactRef}
+          toastVisibility={setToastVisibility}
+          setMessage={setToastMessage} />
         <ScrollToTop />
 
         <Routes>
@@ -89,13 +95,19 @@ function App() {
             element={<Expenses/>}
           />
 
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login toastVisibility={setToastVisibility}
+          setMessage={setToastMessage} />} />
+          <Route path="/register" element={<Register toastVisibility={setToastVisibility}
+            setMessage={setToastMessage} />} />
 
           <Route path="*" element={<PageNotFound />} />
         </Routes>
 
-        <Contact id="contact" ref={contactRef} />
+        <Contact ref={contactRef}
+        toastVisibility={setToastVisibility}
+        setMessage={setToastMessage} />
+
+        {toastVisibility ? <Toast setVisibility={setToastVisibility} message={toastMessage} /> : null}
         <Footer />
       </MainApp>
     </AuthProvider>

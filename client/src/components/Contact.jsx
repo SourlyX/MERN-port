@@ -1,4 +1,4 @@
-import React, { useState, forwardRef } from 'react'
+import { useState, forwardRef } from 'react'
 import styled from 'styled-components'
 import emailjs from '@emailjs/browser'
 
@@ -89,7 +89,7 @@ const ContactDetail = styled.p`
 `
 
 // Componente
-const Contact = forwardRef((props, ref) => {
+const Contact = forwardRef(({ toastVisibility, setMessage }, ref) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -109,7 +109,7 @@ const Contact = forwardRef((props, ref) => {
       email: formData.email,
       message: formData.message,
     }
-    
+
     try {
       await emailjs.send(
         'service_65q8mom',
@@ -117,11 +117,13 @@ const Contact = forwardRef((props, ref) => {
         templateParams,
         'XxvXqvM9XjW6n9XPA'
       )
-      alert('Email sent!')
       setFormData({ name: '', email: '', message: '' })
+      setMessage('Email sent successfully!')
+      toastVisibility(true)
     } catch (error) {
       console.error(error)
-      alert('Failed to send email. Please try again later.', error)
+      setMessage('Failed to send email. Please try again later.')
+      toastVisibility(true)
     }
   }
 
@@ -130,29 +132,29 @@ const Contact = forwardRef((props, ref) => {
       <ContactContainer ref={ref}>
         <Title>Contact</Title>
         <Form onSubmit={handleSubmit}>
-          <Input 
-            type="text" 
-            name="name" 
+          <Input
+            type="text"
+            name="name"
             placeholder="Your name"
             value={formData.name}
             onChange={handleChange}
-            required 
+            required
           />
-          <Input 
-            type="email" 
-            name="email" 
-            placeholder="Your e-mail" 
-            value={formData.email} 
-            onChange={handleChange} 
-            required 
+          <Input
+            type="email"
+            name="email"
+            placeholder="Your e-mail"
+            value={formData.email}
+            onChange={handleChange}
+            required
           />
-          <Textarea 
-            name="message" 
-            rows="5" 
-            placeholder="Message" 
+          <Textarea
+            name="message"
+            rows="5"
+            placeholder="Message"
             value={formData.message}
-            onChange={handleChange} 
-            required 
+            onChange={handleChange}
+            required
           />
           <SubmitButton type="submit">Send</SubmitButton>
         </Form>

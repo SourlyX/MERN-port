@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useContext } from 'react'
+import { AuthContext } from '../../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
@@ -79,12 +80,12 @@ const FooterLink = styled.a`
   }
 `
 
-// 🔹 FUNCIÓN LOGIN COMPLETA
-const Login = () => {
+const Login = ({ toastVisibility, setMessage }) => {
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { user, updateUser, isAuthenticated } = useContext(AuthContext)
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -100,18 +101,23 @@ const Login = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
-        credentials: 'include' // para que viaje la cookie refreshToken
+        credentials: 'include'
       })
 
       const data = await response.json()
       if (!response.ok) throw new Error(data.message || 'Failed to login')
 
-      // Guardar access token y user
+      // Guardar access token
       localStorage.setItem('accessToken', data.data.accessToken)
-      localStorage.setItem('user', JSON.stringify(data.data))
 
-      // Redirigir a proyectos
-      navigate('/projects')
+      // Actualizar contexto (esto también guarda en localStorage)
+      updateUser(data.data)
+
+      setMessage(`Welcome back! ${data.data.username}`)
+      toastVisibility(true)
+
+      // Redirigir al home
+      navigate('/')
     } catch (err) {
       setError(err.message)
     } finally {

@@ -40,7 +40,7 @@ const Expenses = () => {
 
   const incomeOptions = ["Choose one type of income", "Dividend", "Sells", "Services", "Extra", "Other"]
   const expenseOptions = ["Choose one type of expense", "Dwelling", "Telephone Bill", "Internet Bill", "Water Bill",
-    "Electrical Bill", "Feeding", "Transportation", "Health", "Edu cation", "Debts", "Owed to people", "Leisure", "Clothing"]
+    "Electrical Bill", "Feeding", "Transportation", "Health", "Education", "Debts", "Owed to people", "Leisure", "Clothing"]
 
   const defaultIncome = [
     { type: "Net Salary", amount: 0 },

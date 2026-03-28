@@ -1,5 +1,5 @@
+import { useState, useContext, useEffect } from 'react'
 import styled from 'styled-components'
-import { useContext } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthContext } from '../context/AuthContext'
 
@@ -66,14 +66,87 @@ const Hyperlink = styled.a`
   }
 `
 
-function Navbar({ items, contactRef }) {
+const Overlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2147483647;
+`
+
+const Modal = styled.div`
+  background-color: #282C34;
+  border: 1px solid #55F5ED;
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  min-width: 300px;
+`
+
+const ModalText = styled.p`
+  color: #fff;
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+`
+
+const ModalButtons = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+`
+
+const ModalButton = styled.button`
+  padding: 0.5rem 1.5rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  
+  &:hover {
+    opacity: 0.85;
+  }
+`
+
+const CancelButton = styled(ModalButton)`
+  background-color: #4b5563;
+  color: #fff;
+`
+
+const ConfirmButton = styled(ModalButton)`
+  background-color: #FF6B6B;
+  color: #fff;
+`
+
+function Navbar({ items, contactRef, toastVisibility, setMessage }) {
   const { isAuthenticated, logout } = useContext(AuthContext)
   const navigate = useNavigate()
+  const [showModal, setShowModal] = useState(false)
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') setShowModal(false)
+    }
+
+    if (showModal) {
+      window.addEventListener('keydown', handleEsc)
+    }
+
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [showModal])
+
   let navItems = [...items]
 
   const handleLogout = () => {
     logout()
+    setShowModal(false)
     navigate('/')
+    setMessage('Logged out successfully!')
+    toastVisibility(true)
   }
 
   if (isAuthenticated) {
@@ -94,25 +167,39 @@ function Navbar({ items, contactRef }) {
   }
 
   return (
-    <Nav>
-      <List>
-        {navItems.map((item, index) =>
-          item.label === 'Logout' ? (
-            <ListItem label={item.label} key={index}>
-              <Hyperlink as="button" onClick={handleLogout}>
-                {item.label}
-              </Hyperlink>
-            </ListItem>
-          ) : (
-            <ListItem label={item.label} key={index}>
-              <Hyperlink as={Link} to={item.url} onClick={() => handleClick(item.url)}>
-                {item.label}
-              </Hyperlink>
-            </ListItem>
-          )
-        )}
-      </List>
-    </Nav>
+    <>
+      <Nav>
+        <List>
+          {navItems.map((item, index) =>
+            item.label === 'Logout' ? (
+              <ListItem label={item.label} key={index}>
+                <Hyperlink as="button" onClick={() => setShowModal(true)}>
+                  {item.label}
+                </Hyperlink>
+              </ListItem>
+            ) : (
+              <ListItem label={item.label} key={index}>
+                <Hyperlink as={Link} to={item.url} onClick={() => handleClick(item.url)}>
+                  {item.label}
+                </Hyperlink>
+              </ListItem>
+            )
+          )}
+        </List>
+      </Nav>
+
+      {showModal && (
+        <Overlay onClick={() => setShowModal(false)}>
+          <Modal onClick={(e) => e.stopPropagation()}>
+            <ModalText>Are you sure you want to log out?</ModalText>
+            <ModalButtons>
+              <CancelButton onClick={() => setShowModal(false)}>Cancel</CancelButton>
+              <ConfirmButton onClick={handleLogout}>Yes, logout</ConfirmButton>
+            </ModalButtons>
+          </Modal>
+        </Overlay>
+      )}
+    </>
   )
 }
 
