@@ -1,8 +1,7 @@
 import { useState, useContext, useEffect } from 'react'
 import styled from 'styled-components'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { AuthContext } from '../context/AuthContext'
-import Button from './Button'
 
 const Nav = styled.nav`
   position: fixed;

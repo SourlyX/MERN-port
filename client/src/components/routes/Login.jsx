@@ -119,8 +119,6 @@ const Login = ({ toastVisibility, setMessage }) => {
 
       // Redirigir al home
       const from = location.state?.from === '/login' ? '/' : (location.state?.from || '/')
-      console.log('state:', location.state)
-      console.log('from:', from)
       navigate(from)
     } catch (err) {
       setError(err.message)
