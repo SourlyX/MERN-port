@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react'
 import { AuthContext } from '../../context/AuthContext'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 
 const Container = styled.div`
@@ -84,8 +84,9 @@ const Login = ({ toastVisibility, setMessage }) => {
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const { updateUser } = useContext(AuthContext)
   const navigate = useNavigate()
-  const { user, updateUser, isAuthenticated } = useContext(AuthContext)
+  const location = useLocation()
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -117,7 +118,10 @@ const Login = ({ toastVisibility, setMessage }) => {
       toastVisibility(true)
 
       // Redirigir al home
-      navigate('/')
+      const from = location.state?.from === '/login' ? '/' : (location.state?.from || '/')
+      console.log('state:', location.state)
+      console.log('from:', from)
+      navigate(from)
     } catch (err) {
       setError(err.message)
     } finally {

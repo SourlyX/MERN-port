@@ -16,6 +16,7 @@ import Expenses from "./components/projects/expenses/Expenses"
 import Login from "./components/routes/Login"
 import Register from "./components/routes/Register"
 import data from "./data.json"
+import RedirectIfAuth from "./components/routes/RedirectIfAuth"
 import Toast from "./components/Toast"
 import "./index.css"
 import { HelmetProvider } from "react-helmet-async"
@@ -95,10 +96,13 @@ function App() {
             element={<Expenses/>}
           />
 
-          <Route path="/login" element={<Login toastVisibility={setToastVisibility}
-          setMessage={setToastMessage} />} />
-          <Route path="/register" element={<Register toastVisibility={setToastVisibility}
-            setMessage={setToastMessage} />} />
+          <Route path="/login" element={<RedirectIfAuth>
+            <Login toastVisibility={setToastVisibility}
+          setMessage={setToastMessage} /> </RedirectIfAuth>} />
+          <Route path="/register" element={<RedirectIfAuth>
+            <Register toastVisibility={setToastVisibility}
+            setMessage={setToastMessage} />
+            </RedirectIfAuth>} />
 
           <Route path="*" element={<PageNotFound />} />
         </Routes>

@@ -1,7 +1,8 @@
 import { useState, useContext, useEffect } from 'react'
 import styled from 'styled-components'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { AuthContext } from '../context/AuthContext'
+import Button from './Button'
 
 const Nav = styled.nav`
   position: fixed;
@@ -125,6 +126,7 @@ const ConfirmButton = styled(ModalButton)`
 
 function Navbar({ items, contactRef, toastVisibility, setMessage }) {
   const { isAuthenticated, logout } = useContext(AuthContext)
+  const location = useLocation()
   const navigate = useNavigate()
   const [showModal, setShowModal] = useState(false)
   useEffect(() => {
@@ -144,7 +146,6 @@ function Navbar({ items, contactRef, toastVisibility, setMessage }) {
   const handleLogout = () => {
     logout()
     setShowModal(false)
-    navigate('/')
     setMessage('Logged out successfully!')
     toastVisibility(true)
   }
@@ -179,7 +180,16 @@ function Navbar({ items, contactRef, toastVisibility, setMessage }) {
               </ListItem>
             ) : (
               <ListItem label={item.label} key={index}>
-                <Hyperlink as={Link} to={item.url} onClick={() => handleClick(item.url)}>
+                <Hyperlink
+                  as="button"
+                  onClick={() => {
+                    if (item.url === '/login') {
+                      navigate('/login', { state: { from: location.pathname } })
+                    } else {
+                      navigate(item.url)
+                    }
+                  }}
+                >
                   {item.label}
                 </Hyperlink>
               </ListItem>
