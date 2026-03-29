@@ -16,6 +16,18 @@ const Nav = styled.nav`
   height: 1.5rem;
   font-size: 1rem;
   overflow: hidden;
+  
+  @media (max-width: 768px) {
+    top: 0;
+    border-radius: ${props => props.$menuOpen ? '0 0 16px 16px' : '0'};
+    height: ${props => props.$menuOpen ? 'auto' : '0'};
+    max-height: ${props => props.$menuOpen ? '100vh' : '0'};
+    opacity: ${props => props.$menuOpen ? '1' : '0'};
+    padding: ${props => props.$menuOpen ? '2rem 0' : '0'};
+    border: ${props => props.$menuOpen ? '1px solid #55F5ED' : 'none'};
+    transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.4s ease, border-radius 0.3s ease;
+    z-index: 2147483646;
+  }
 `
 
 const List = styled.ul`
@@ -27,6 +39,12 @@ const List = styled.ul`
   padding: 0;
   margin: 0;
   transition: all .4s;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
 `
 
 const ListItem = styled.li`
@@ -34,13 +52,13 @@ const ListItem = styled.li`
   transform: translatey(18px);
   transition: all .3s;
   
-  &:hover{
+  &:active {
     transform: translatey(-18px);
     cursor: pointer;
     padding: 0 1.5rem;
   }
   
-  &:hover a{
+  &:active a{
     transform: translatey(15px);
     color: #6BFFA6;
   }
@@ -50,6 +68,19 @@ const ListItem = styled.li`
     display: block;
     transform: translatey(-1rem);
     opacity: 1;
+  }
+
+  @media (max-width: 768px) {
+    transform: none;
+
+    &:active {
+      transform: none;
+      padding: 0;
+    }
+
+    &:before {
+      display: none;
+    }
   }
 `
 
@@ -63,6 +94,19 @@ const Hyperlink = styled.a`
   
   &:hover {
     background-color: #FF6B6B;
+  }
+
+  @media (max-width: 768px) {
+    background-color: transparent;
+    border-radius: 0;
+    font-size: 1.2rem;
+    padding: 0.5rem 1rem;
+    margin: 0;
+
+    &:active {
+      background-color: transparent;
+      color: #6BFFA6;
+    }
   }
 `
 
@@ -123,10 +167,28 @@ const ConfirmButton = styled(ModalButton)`
   color: #fff;
 `
 
+const HamburgerIcon = styled.button`
+  display: none;
+  position: fixed;
+  top: 0.5rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: #55F5ED;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 2147483648;
+  
+  @media (max-width: 768px) {
+    display: block;
+  }
+`
+
 function Navbar({ items, contactRef, toastVisibility, setMessage }) {
   const { isAuthenticated, logout } = useContext(AuthContext)
   const location = useLocation()
   const navigate = useNavigate()
+  const [menuOpen, setMenuOpen] = useState(false)
   const [showModal, setShowModal] = useState(false)
   useEffect(() => {
     const handleEsc = (e) => {
@@ -168,7 +230,8 @@ function Navbar({ items, contactRef, toastVisibility, setMessage }) {
 
   return (
     <>
-      <Nav>
+      <HamburgerIcon onClick={() => setMenuOpen(!menuOpen)}>☰</HamburgerIcon>
+      <Nav $menuOpen={menuOpen}>
         <List>
           {navItems.map((item, index) =>
             item.label === 'Logout' ? (

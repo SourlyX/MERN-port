@@ -37,7 +37,7 @@ const WelcomeMessage = styled.h1`
 
 const ButtonContainer = styled.div`
   position: fixed;
-  top: calc(1.5rem + 5px);
+  top: calc(1.5rem + 20px);
   right: 10px;
   text-align: right;
   z-index: 999;
