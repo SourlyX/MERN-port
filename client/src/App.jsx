@@ -18,6 +18,7 @@ import Register from "./components/routes/Register"
 import data from "./data.json"
 import RedirectIfAuth from "./components/routes/RedirectIfAuth"
 import Toast from "./components/Toast"
+import RouteScrollToTop from "./components/RouteScrollToTop"
 import "./index.css"
 import { HelmetProvider } from "react-helmet-async"
 import { Routes, Route } from "react-router-dom"
@@ -60,6 +61,8 @@ function App() {
             rel="stylesheet"
           />
         </HelmetProvider>
+        
+        <RouteScrollToTop />
 
         <Navbar items={data.navbarItems}
           contactRef={contactRef}

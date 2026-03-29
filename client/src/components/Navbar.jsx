@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from 'react'
-import styled from 'styled-components'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { AuthContext } from '../context/AuthContext'
+import styled from 'styled-components'
 
 const Nav = styled.nav`
   position: fixed;
@@ -26,6 +26,8 @@ const Nav = styled.nav`
     padding: ${props => props.$menuOpen ? '2rem 0' : '0'};
     border: ${props => props.$menuOpen ? '1px solid #55F5ED' : 'none'};
     transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.4s ease, border-radius 0.3s ease;
+    Height: 100vh;
+    opacity: 0.95;
     z-index: 2147483646;
   }
 `
@@ -51,14 +53,14 @@ const ListItem = styled.li`
   display: block;
   transform: translatey(18px);
   transition: all .3s;
-  
-  &:active {
+  cursor: pointer;
+
+  &:hover {
     transform: translatey(-18px);
-    cursor: pointer;
     padding: 0 1.5rem;
   }
   
-  &:active a{
+  &:hover span {
     transform: translatey(15px);
     color: #6BFFA6;
   }
@@ -71,11 +73,14 @@ const ListItem = styled.li`
   }
 
   @media (max-width: 768px) {
+    border-radius: 40px;
     transform: none;
+    overflow: hidden;
 
     &:active {
       transform: none;
       padding: 0;
+      background-color: #FF6B6B;
     }
 
     &:before {
@@ -91,6 +96,11 @@ const Hyperlink = styled.a`
   margin: -10px;
   background-color: #3B3F46;
   border-radius: 50%;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
   
   &:hover {
     background-color: #FF6B6B;
@@ -235,32 +245,35 @@ function Navbar({ items, contactRef, toastVisibility, setMessage }) {
         <List>
           {navItems.map((item, index) =>
             item.label === 'Logout' ? (
-              <ListItem label={item.label} key={index}>
-                <Hyperlink as="button" onClick={() => setShowModal(true)}>
-                  {item.label}
-                </Hyperlink>
+              <ListItem
+                label={item.label}
+                key={index}
+                onClick={() => setShowModal(true)}
+              >
+                <Hyperlink as="span">{item.label}</Hyperlink>
               </ListItem>
             ) : (
-              <ListItem label={item.label} key={index}>
-                <Hyperlink
-                  as="button"
-                  onClick={() => {
-                    if (item.url === '/login') {
-                      navigate('/login', { state: { from: location.pathname } })
-                    } else {
-                      navigate(item.url)
-                    }
-                  }}
-                >
-                  {item.label}
-                </Hyperlink>
-              </ListItem>
-            )
+              <ListItem
+                label={item.label}
+                key={index}
+                onClick={() => {
+                  if (item.url === '#contact') {
+                    contactRef.current?.scrollIntoView({ behavior: 'smooth' })
+                  } else if(item.url === '/login') {
+                    navigate('/login', { state: { from: location.pathname } })
+                  } else {
+                    navigate(item.url)
+                }
+                }}
+              >
+          <Hyperlink as="span">{item.label}</Hyperlink>
+        </ListItem>
+        )
           )}
-        </List>
-      </Nav>
+      </List>
+    </Nav >
 
-      {showModal && (
+      { showModal && (
         <Overlay onClick={() => setShowModal(false)}>
           <Modal onClick={(e) => e.stopPropagation()}>
             <ModalText>Are you sure you want to log out?</ModalText>
@@ -270,7 +283,8 @@ function Navbar({ items, contactRef, toastVisibility, setMessage }) {
             </ModalButtons>
           </Modal>
         </Overlay>
-      )}
+      )
+}
     </>
   )
 }
