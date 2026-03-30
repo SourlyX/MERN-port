@@ -1,7 +1,24 @@
-export const updateUserData = async (payload) => {
-  const token = localStorage.getItem('accessToken');
+const refreshAccessToken = async () => {
+  const res = await fetch('/api/users/refresh', {
+    method: 'POST',
+    credentials: 'include',
+  });
 
-  const res = await fetch('/api/users/update', {
+  if (!res.ok) throw new Error("Session expired. Please log in again.");
+
+  const data = await res.json();
+  localStorage.setItem('accessToken', data.accessToken);
+  return data.accessToken;
+};
+
+export const updateUserData = async (payload) => {
+  let token = localStorage.getItem('accessToken');
+
+  if (!token) {
+    throw new Error("No token found. Please log in again.");
+  }
+
+  let res = await fetch('/api/users/update', {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -11,7 +28,25 @@ export const updateUserData = async (payload) => {
     body: JSON.stringify(payload),
   });
 
+  // Si el token expiró, renovar y reintentar
+  if (res.status === 401) {
+    try {
+      token = await refreshAccessToken();
+      res = await fetch('/api/users/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      throw new Error("Session expired. Please log in again.");
+    }
+  }
+
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || 'Error al actualizar usuario');
-  return data.data; // usuario actualizado
+  return data.data;
 };

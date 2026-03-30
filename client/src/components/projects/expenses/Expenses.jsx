@@ -1,42 +1,52 @@
+// src/components/projects/expenses/Expenses.jsx
+
 import { useState, useContext, useEffect } from "react"
-import { updateUserData } from '../../../api/users'
-import { AuthContext } from '../../../context/AuthContext'
-import Tables from "./Tables"
+import { AuthContext } from "../../../context/AuthContext"
+import { updateUserData } from "../../../api/users"
 import IncomeFlow from "./IncomeFlow"
+import Tables from "./Tables"
 import styled from "styled-components"
 
 const Container = styled.div`
-  margin-top: 2.5rem;
-  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 20px;
+  gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
+
+  & > * {
+    width: 100%;
+  }
 `
 
 const IncAndExpContainer = styled.div`
-  margin: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: auto;
 `
 
 const SaveButton = styled.button`
-  background-color: #61dafb;
-  border: none;
-  color: #282c34;
   padding: 10px 20px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
+  border-radius: 10px;
+  border: none;
+  background-color: #4caf50;
+  color: white;
   font-size: 16px;
-  border-radius: 5px;
   cursor: pointer;
-  margin: 10px  0px 30px 0px;
-  transition: background-color 0.3s ease;
+  margin-top: 20px;
+  width: auto;
+
   &:hover {
-    background-color: #21a1f1;
+    background-color: #45a049;
   }
 `
 
 const Expenses = () => {
-  const { user, isAuthenticated, updateUser, addPayInfo } = useContext(AuthContext)
+  const { user, isAuthenticated, updateUser } = useContext(AuthContext)
 
   const incomeOptions = ["Choose one type of income", "Dividend", "Sells", "Services", "Extra", "Other"]
   const expenseOptions = ["Choose one type of expense", "Dwelling", "Telephone Bill", "Internet Bill", "Water Bill",
@@ -57,39 +67,76 @@ const Expenses = () => {
 
   const [income, setIncome] = useState(defaultIncome)
   const [expenses, setExpenses] = useState(defaultExpenses)
+  const [dateRange, setDateRange] = useState([null, null])
+  const [salaryData, setSalaryData] = useState({
+    grossSalary: "",
+    taxes: 0,
+    vto: "",
+    ot: "",
+    isSalaried: false
+  })
 
   useEffect(() => {
     if (isAuthenticated && user) {
       setIncome(user.incomes && user.incomes.length > 0 ? user.incomes : defaultIncome)
       setExpenses(user.expenses && user.expenses.length > 0 ? user.expenses : defaultExpenses)
+      if (user.payInfo?.paymentDates?.length === 2) {
+        setDateRange([
+          new Date(user.payInfo.paymentDates[0]),
+          new Date(user.payInfo.paymentDates[1])
+        ])
+      }
+      if (user.payInfo) {
+        setSalaryData({
+          grossSalary: user.payInfo.grossSalary || "",
+          taxes: user.payInfo.taxes || 0,
+          vto: user.payInfo.vto || "",
+          ot: user.payInfo.ot || "",
+          isSalaried: user.payInfo.isSalaried || false
+        })
+      }
     }
   }, [isAuthenticated, user])
 
-const saveChanges = async () => {
-  try {
-    const token = localStorage.getItem('accessToken')
+  const saveChanges = async () => {
+    try {
+      // Validar periodo si es salaried
+      if (salaryData.isSalaried) {
+        if (!dateRange[0] || !dateRange[1]) {
+          alert("⚠️ Please select a payroll period before saving.")
+          return
+        }
+        const today = new Date()
+        if (today < dateRange[0] || today > dateRange[1]) {
+          alert("⚠️ Cannot save: current date is outside the payroll period.")
+          return
+        }
+      }
 
-    // juntar todo
-    const payload = {
-      incomes: income,
-      expenses: expenses,
-      payInfo: [{ payType, paymentDates }]
+      const payload = {
+        incomes: income,
+        expenses: expenses,
+        payInfo: {
+          paymentDates: dateRange.filter(d => d !== null),
+          grossSalary: salaryData.grossSalary,
+          taxes: salaryData.taxes,
+          vto: salaryData.vto,
+          ot: salaryData.ot,
+          isSalaried: salaryData.isSalaried
+        }
+      }
+
+      const updatedUser = await updateUserData(payload)
+      updateUser(updatedUser)
+      alert("✅ Changes saved!")
+    } catch (err) {
+      console.error(err)
+      alert("❌ Error: " + err.message)
     }
-
-    // nueva API que actualiza todo el usuario
-    const updatedUser = await updateUserData(token, payload)
-
-    // actualizar contexto global
-    updateUser(updatedUser)
-    console.log("Changes saved")
-  } catch (err) {
-    console.error(err)
   }
-}
 
   const [newIncome, setNewIncome] = useState()
   const [incomeType, setIncomeType] = useState(incomeOptions[0])
-
   const [newExpense, setNewExpense] = useState()
   const [expenseType, setExpenseType] = useState(expenseOptions[0])
 
@@ -121,7 +168,6 @@ const saveChanges = async () => {
       alert("Please input an expense")
       return
     }
-
     if (expenseType === expenseOptions[0]) {
       alert("Please select a type of expense")
       return
@@ -200,12 +246,18 @@ const saveChanges = async () => {
         />
       </IncAndExpContainer>
 
-      <IncomeFlow income={income} setIncome={setIncome} />
+      <IncomeFlow
+        income={income}
+        setIncome={setIncome}
+        dateRange={dateRange}
+        setDateRange={setDateRange}
+        salaryData={salaryData}
+        setSalaryData={setSalaryData}
+      />
 
       <Tables income={income} expenses={expenses} handleDelete={handleDelete} />
 
       <SaveButton onClick={saveChanges}>Save changes on Database</SaveButton>
-
     </Container>
   )
 }
