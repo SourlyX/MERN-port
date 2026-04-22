@@ -102,7 +102,8 @@ const loginUser = async (req, res) => {
         accessToken,
         incomes: user.incomes,
         expenses: user.expenses,
-        todos: user.todos
+        todos: user.todos,
+        payInfo: user.payInfo
       }
     });
 

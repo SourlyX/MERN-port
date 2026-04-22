@@ -43,35 +43,6 @@ const SaveButton = styled.button`
   }
 `
 
-// ─── Utilidad: calcular la quincena actual ───
-const getCurrentQuincena = () => {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
-  const year = today.getFullYear()
-  const month = today.getMonth()
-  const day = today.getDate()
-  const daysInMonth = new Date(year, month + 1, 0).getDate()
-
-  if (day <= 15) {
-    return [new Date(year, month, 1), new Date(year, month, 15)]
-  } else {
-    return [new Date(year, month, 16), new Date(year, month, daysInMonth)]
-  }
-}
-
-// ─── Utilidad: verificar si "hoy" está dentro del rango ───
-const isTodayInRange = (start, end) => {
-  if (!start || !end) return false
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const s = new Date(start)
-  s.setHours(0, 0, 0, 0)
-  const e = new Date(end)
-  e.setHours(0, 0, 0, 0)
-  return today >= s && today <= e
-}
-
 const Expenses = () => {
   const { user, isAuthenticated, updateUser } = useContext(AuthContext)
 
@@ -96,91 +67,75 @@ const Expenses = () => {
   const [expenses, setExpenses] = useState(defaultExpenses)
   const [dateRange, setDateRange] = useState([null, null])
   const [salaryData, setSalaryData] = useState({
-    grossSalary: "",
-    taxes: 0,
-    vto: "",
-    ot: "",
-    isSalaried: false
-  })
+  grossSalary: "",
+  taxes: 0,
+  vto: "",
+  ot: "",
+  isSalaried: null
+})
 
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      setIncome(user.incomes && user.incomes.length > 0 ? user.incomes : defaultIncome)
-      setExpenses(user.expenses && user.expenses.length > 0 ? user.expenses : defaultExpenses)
-
-      // ─── Lógica de auto-ajuste del periodo guardado ───
-      if (user.payInfo?.paymentDates?.length === 2) {
-        const savedStart = new Date(user.payInfo.paymentDates[0])
-        const savedEnd = new Date(user.payInfo.paymentDates[1])
-
-        if (isTodayInRange(savedStart, savedEnd)) {
-          // ✅ Está dentro del periodo guardado → usar tal cual
-          setDateRange([savedStart, savedEnd])
-        } else {
-          // ⚠️ Fuera del periodo → mover automáticamente a la quincena actual
-          const [qStart, qEnd] = getCurrentQuincena()
-          setDateRange([qStart, qEnd])
-          console.log("📅 Payroll period auto-adjusted to current quincena:", qStart, "→", qEnd)
-        }
-      }
-
-      if (user.payInfo) {
-        setSalaryData({
-          grossSalary: user.payInfo.grossSalary || "",
-          taxes: user.payInfo.taxes || 0,
-          vto: user.payInfo.vto || "",
-          ot: user.payInfo.ot || "",
-          isSalaried: user.payInfo.isSalaried || false
-        })
-      }
+useEffect(() => {
+  if (isAuthenticated && user) {
+    setIncome(user.incomes && user.incomes.length > 0 ? user.incomes : defaultIncome)
+    setExpenses(user.expenses && user.expenses.length > 0 ? user.expenses : defaultExpenses)
+    if (user.payInfo?.paymentDates?.length === 2) {
+      setDateRange([
+        new Date(user.payInfo.paymentDates[0]),
+        new Date(user.payInfo.paymentDates[1])
+      ])
     }
-  }, [isAuthenticated, user])
-
-  const saveChanges = async () => {
-    try {
-      if (salaryData.isSalaried) {
-        if (!dateRange[0] || !dateRange[1]) {
-          alert("⚠️ Please select a payroll period before saving.")
-          return
-        }
-
-        // Validar que el rango sea ~15 días (con tolerancia para febrero)
-        const diffDays = Math.round(
-          (dateRange[1] - dateRange[0]) / (1000 * 60 * 60 * 24)
-        ) + 1 // +1 porque incluye ambos días
-
-        if (diffDays < 13 || diffDays > 16) {
-          alert(`⚠️ Payroll period must be approximately 15 days (got ${diffDays} days).`)
-          return
-        }
-
-        if (!isTodayInRange(dateRange[0], dateRange[1])) {
-          alert("⚠️ Cannot save: current date is outside the payroll period.")
-          return
-        }
-      }
-
-      const payload = {
-        incomes: income,
-        expenses: expenses,
-        payInfo: {
-          paymentDates: dateRange.filter(d => d !== null),
-          grossSalary: salaryData.grossSalary,
-          taxes: salaryData.taxes,
-          vto: salaryData.vto,
-          ot: salaryData.ot,
-          isSalaried: salaryData.isSalaried
-        }
-      }
-
-      const updatedUser = await updateUserData(payload)
-      updateUser(updatedUser)
-      alert("✅ Changes saved!")
-    } catch (err) {
-      console.error(err)
-      alert("❌ Error: " + err.message)
+    if (user.payInfo) {
+      setSalaryData({
+        grossSalary: user.payInfo.grossSalary || "",
+        taxes: user.payInfo.taxes || 0,
+        vto: user.payInfo.vto || "",
+        ot: user.payInfo.ot || "",
+        isSalaried: !!user.payInfo.isSalaried
+      })
     }
   }
+}, [isAuthenticated, user])
+
+const saveChanges = async () => {
+  try {
+    if (salaryData.isSalaried) {
+      if (!dateRange[0] || !dateRange[1]) {
+        alert("Please select a payroll period before saving.")
+        return
+      }
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const start = new Date(dateRange[0])
+      start.setHours(0, 0, 0, 0)
+      const end = new Date(dateRange[1])
+      end.setHours(23, 59, 59, 999)
+      if (today < start || today > end) {
+        alert("Cannot save: current date is outside the payroll period.")
+        return
+      }
+    }
+
+    const payload = {
+      incomes: income,
+      expenses: expenses,
+      payInfo: {
+        paymentDates: dateRange.filter(d => d !== null),
+        grossSalary: salaryData.grossSalary,
+        taxes: salaryData.taxes,
+        vto: salaryData.vto,
+        ot: salaryData.ot,
+        isSalaried: salaryData.isSalaried
+      }
+    }
+
+    const updatedUser = await updateUserData(payload)
+    updateUser(updatedUser)
+    alert("Changes saved!")
+  } catch (err) {
+    console.error(err)
+    alert("Error: " + err.message)
+  }
+}
 
   const [newIncome, setNewIncome] = useState()
   const [incomeType, setIncomeType] = useState(incomeOptions[0])
@@ -203,10 +158,10 @@ const Expenses = () => {
     }
 
     const currentIncomes = income.slice(0, -1)
-    let total = income.at(-1)
+    const oldTotal = income.at(-1)
     const updatedIncomes = [...currentIncomes, newIncomeObject]
-    total.amount = total.amount + newIncomeObject.amount
-    setIncome([...updatedIncomes, total])
+    const newTotal = { type: "Total", amount: oldTotal.amount + newIncomeObject.amount }
+    setIncome([...updatedIncomes, newTotal])
     setNewIncome("")
   }
 
@@ -226,10 +181,10 @@ const Expenses = () => {
     }
 
     const currentExpenses = expenses.slice(0, -1)
-    let total = expenses.at(-1)
+    const oldTotal = expenses.at(-1)
     const updatedExpenses = [...currentExpenses, newExpenseObject]
-    total.amount = total.amount + newExpenseObject.amount
-    setExpenses([...updatedExpenses, total])
+    const newTotal = { type: "Total", amount: oldTotal.amount + newExpenseObject.amount }
+    setExpenses([...updatedExpenses, newTotal])
     setNewExpense("")
   }
 

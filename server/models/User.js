@@ -50,6 +50,26 @@ const payInfoSchema = new mongoose.Schema({
   paymentDates: {
     type: [Date],
     default: []
+  },
+  grossSalary: {
+    type: Number,
+    default: 0
+  },
+  taxes: {
+    type: Number,
+    default: 0
+  },
+  vto: {
+    type: Number,
+    default: 0
+  },
+  ot: {
+    type: Number,
+    default: 0
+  },
+  isSalaried: {
+    type: Boolean,
+    default: false
   }
 });
 

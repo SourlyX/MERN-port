@@ -39,21 +39,19 @@ const Input = styled.input`
 const IncomeFlow = ({ income, setIncome, dateRange, setDateRange, salaryData, setSalaryData }) => {
   const isSalariedOptions = ["===Select one===", "Yes", "No"]
 
-  // Derivar todo de salaryData — sin estados locales
-  const salaried = salaryData.isSalaried ? "Yes" : "===Select one==="
+  const isSalaried = !!salaryData.isSalaried
+
   const newSalary = salaryData.grossSalary
   const taxes = salaryData.taxes
   const VTO = salaryData.vto
   const OT = salaryData.ot
 
-  // Helper para actualizar un campo de salaryData
   const updateField = (field, value) => {
     setSalaryData(prev => ({ ...prev, [field]: value }))
   }
 
-  // Cálculo del Net Salary
   useEffect(() => {
-    if (!newSalary || !salaryData.isSalaried) return
+    if (!newSalary || !isSalaried) return
 
     const salary = parseFloat(newSalary) || 0
     const taxRate = parseFloat(taxes) || 0
@@ -85,6 +83,7 @@ const IncomeFlow = ({ income, setIncome, dateRange, setDateRange, salaryData, se
     const condition1 = otAddition > 0
     const condition2 = vtoDeduction > 0
     const condition3 = taxRate > 0
+
     if (condition1 || condition2 || condition3) {
       breakdownDetails.push({ label: "Gross Salary", amount: salary })
     }
@@ -98,25 +97,45 @@ const IncomeFlow = ({ income, setIncome, dateRange, setDateRange, salaryData, se
       breakdownDetails.push({ label: `- Taxes (${taxRate}%)`, amount: salary * (taxRate / 100) })
     }
 
-    const oldIncome = income.slice(1)
     const updatedSalary = {
       type: "Net Salary",
-      amount: parseFloat(netSalary).toFixed(2),
+      amount: parseFloat(netSalary.toFixed(2)),
       breakDown: breakdownDetails
     }
 
-    let total = income.at(-1)
-    total.amount = (parseFloat(total.amount) - parseFloat(income[0].amount) + parseFloat(updatedSalary.amount)).toFixed(2)
-    setIncome([updatedSalary, ...oldIncome])
-  }, [newSalary, taxes, VTO, OT, salaryData.isSalaried])
+    setIncome(prevIncome => {
+      const extraIncomes = prevIncome.filter(
+        item => item.type !== "Net Salary" && item.type !== "Total"
+      )
+
+      const totalAmount = parseFloat(netSalary.toFixed(2)) + extraIncomes.reduce(
+        (sum, item) => sum + parseFloat(item.amount), 0
+      )
+
+      return [
+        updatedSalary,
+        ...extraIncomes,
+        { type: "Total", amount: parseFloat(totalAmount.toFixed(2)) }
+      ]
+    })
+  }, [newSalary, taxes, VTO, OT, isSalaried])
+
+  const getDropdownValue = () => {
+    if (salaryData.isSalaried === null) return "===Select one==="
+    return isSalaried ? "Yes" : "No"
+  }
 
   return (
     <Container>
       <IncomeContainer>
         <QS>Are you a salaried person?</QS>
         <Selection
-          value={salaried}
-          onChange={(e) => updateField('isSalaried', e.target.value === "Yes")}
+          value={getDropdownValue()}
+          onChange={(e) => {
+            const val = e.target.value
+            if (val === "Yes") updateField('isSalaried', true)
+            else if (val === "No") updateField('isSalaried', false)
+          }}
         >
           {isSalariedOptions.map((one) => (
             <option key={one}>{one}</option>
@@ -124,7 +143,7 @@ const IncomeFlow = ({ income, setIncome, dateRange, setDateRange, salaryData, se
         </Selection>
       </IncomeContainer>
 
-      {salaried === "Yes" && (
+      {isSalaried && (
         <>
           <PeriodSelector
             calendarName={"🗓️ Current Payroll Period"}
@@ -145,7 +164,7 @@ const IncomeFlow = ({ income, setIncome, dateRange, setDateRange, salaryData, se
         </>
       )}
 
-      {(newSalary !== "" && salaried === "Yes") && (
+      {(newSalary !== "" && isSalaried) && (
         <>
           <IncomeContainer>
             <QS>How much do you pay in taxes? (%)</QS>
