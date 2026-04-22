@@ -6,10 +6,20 @@ const TablesContainer = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: space-around;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: center;
+  }
 `
 
 const TableContainer = styled.div`
   width: 45%;
+
+  @media (max-width: 768px) {
+    width: 95%;
+  }
 `
 
 const StyledTable = styled.table`

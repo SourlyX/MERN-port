@@ -1,9 +1,9 @@
-import { useState, useContext, useEffect } from "react"
-import { AuthContext } from "../../../context/AuthContext"
-import { updateUserData } from "../../../api/users"
-import IncomeFlow from "./IncomeFlow"
-import Tables from "./Tables"
-import styled from "styled-components"
+import { useState, useContext, useEffect } from "react";
+import { AuthContext } from "../../../context/AuthContext";
+import { updateUserData } from "../../../api/users";
+import IncomeFlow from "./IncomeFlow";
+import Tables from "./Tables";
+import styled from "styled-components";
 
 const Container = styled.div`
   display: flex;
@@ -17,7 +17,7 @@ const Container = styled.div`
   & > * {
     width: 100%;
   }
-`
+`;
 
 const IncAndExpContainer = styled.div`
   display: flex;
@@ -25,7 +25,7 @@ const IncAndExpContainer = styled.div`
   justify-content: center;
   gap: 10px;
   width: auto;
-`
+`;
 
 const SaveButton = styled.button`
   padding: 10px 20px;
@@ -41,178 +41,218 @@ const SaveButton = styled.button`
   &:hover {
     background-color: #45a049;
   }
-`
+`;
 
 const Expenses = () => {
-  const { user, isAuthenticated, updateUser } = useContext(AuthContext)
+  const { user, isAuthenticated, updateUser } = useContext(AuthContext);
 
-  const incomeOptions = ["Choose one type of income", "Dividend", "Sells", "Services", "Extra", "Other"]
-  const expenseOptions = ["Choose one type of expense", "Dwelling", "Telephone Bill", "Internet Bill", "Water Bill",
-    "Electrical Bill", "Feeding", "Transportation", "Health", "Education", "Debts", "Owed to people", "Leisure", "Clothing"]
+  const incomeOptions = [
+    "Choose one type of income",
+    "Dividend",
+    "Sells",
+    "Services",
+    "Extra",
+    "Other",
+  ];
+  const expenseOptions = [
+    "Choose one type of expense",
+    "Dwelling",
+    "Telephone Bill",
+    "Internet Bill",
+    "Water Bill",
+    "Electrical Bill",
+    "Feeding",
+    "Transportation",
+    "Health",
+    "Education",
+    "Debts",
+    "Owed to people",
+    "Leisure",
+    "Clothing",
+  ];
 
   const defaultIncome = [
     { type: "Net Salary", amount: 0 },
-    { type: "Total", amount: 0 }
-  ]
+    { type: "Total", amount: 0 },
+  ];
 
   const defaultExpenses = [
     { type: "Dwelling", amount: 140000 },
     { type: "Telephone Bill", amount: 44000 },
     { type: "Internet Bill", amount: 29000 },
     { type: "Education", amount: 27000 },
-    { type: "Total", amount: 240000 }
-  ]
+    { type: "Total", amount: 240000 },
+  ];
 
-  const [income, setIncome] = useState(defaultIncome)
-  const [expenses, setExpenses] = useState(defaultExpenses)
-  const [dateRange, setDateRange] = useState([null, null])
+  const [income, setIncome] = useState(defaultIncome);
+  const [expenses, setExpenses] = useState(defaultExpenses);
+  const [dateRange, setDateRange] = useState([null, null]);
   const [salaryData, setSalaryData] = useState({
-  grossSalary: "",
-  taxes: 0,
-  vto: "",
-  ot: "",
-  isSalaried: null
-})
+    grossSalary: "",
+    taxes: 0,
+    vto: "",
+    ot: "",
+    isSalaried: null,
+  });
 
-useEffect(() => {
-  if (isAuthenticated && user) {
-    setIncome(user.incomes && user.incomes.length > 0 ? user.incomes : defaultIncome)
-    setExpenses(user.expenses && user.expenses.length > 0 ? user.expenses : defaultExpenses)
-    if (user.payInfo?.paymentDates?.length === 2) {
-      setDateRange([
-        new Date(user.payInfo.paymentDates[0]),
-        new Date(user.payInfo.paymentDates[1])
-      ])
-    }
-    if (user.payInfo) {
-      setSalaryData({
-        grossSalary: user.payInfo.grossSalary || "",
-        taxes: user.payInfo.taxes || 0,
-        vto: user.payInfo.vto || "",
-        ot: user.payInfo.ot || "",
-        isSalaried: !!user.payInfo.isSalaried
-      })
-    }
-  }
-}, [isAuthenticated, user])
-
-const saveChanges = async () => {
-  try {
-    if (salaryData.isSalaried) {
-      if (!dateRange[0] || !dateRange[1]) {
-        alert("Please select a payroll period before saving.")
-        return
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      setIncome(
+        user.incomes && user.incomes.length > 0 ? user.incomes : defaultIncome,
+      );
+      setExpenses(
+        user.expenses && user.expenses.length > 0
+          ? user.expenses
+          : defaultExpenses,
+      );
+      if (user.payInfo?.paymentDates?.length === 2) {
+        setDateRange([
+          new Date(user.payInfo.paymentDates[0]),
+          new Date(user.payInfo.paymentDates[1]),
+        ]);
       }
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      const start = new Date(dateRange[0])
-      start.setHours(0, 0, 0, 0)
-      const end = new Date(dateRange[1])
-      end.setHours(23, 59, 59, 999)
-      if (today < start || today > end) {
-        alert("Cannot save: current date is outside the payroll period.")
-        return
+      if (user.payInfo) {
+        setSalaryData({
+          grossSalary: user.payInfo.grossSalary || "",
+          taxes: user.payInfo.taxes || 0,
+          vto: user.payInfo.vto || "",
+          ot: user.payInfo.ot || "",
+          isSalaried: !!user.payInfo.isSalaried,
+        });
       }
     }
+  }, [isAuthenticated, user]);
 
-    const payload = {
-      incomes: income,
-      expenses: expenses,
-      payInfo: {
-        paymentDates: dateRange.filter(d => d !== null),
-        grossSalary: salaryData.grossSalary,
-        taxes: salaryData.taxes,
-        vto: salaryData.vto,
-        ot: salaryData.ot,
-        isSalaried: salaryData.isSalaried
+  const saveChanges = async () => {
+    try {
+      if (salaryData.isSalaried) {
+        if (!dateRange[0] || !dateRange[1]) {
+          alert("Please select a payroll period before saving.");
+          return;
+        }
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const start = new Date(dateRange[0]);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(dateRange[1]);
+        end.setHours(23, 59, 59, 999);
+        if (today < start || today > end) {
+          alert("Cannot save: current date is outside the payroll period.");
+          return;
+        }
       }
+
+      const payload = {
+        incomes: income,
+        expenses: expenses,
+        payInfo: {
+          paymentDates: dateRange.filter((d) => d !== null),
+          grossSalary: salaryData.grossSalary,
+          taxes: salaryData.taxes,
+          vto: salaryData.vto,
+          ot: salaryData.ot,
+          isSalaried: salaryData.isSalaried,
+        },
+      };
+
+      const updatedUser = await updateUserData(payload);
+      updateUser(updatedUser);
+      alert("Changes saved!");
+    } catch (err) {
+      console.error(err);
+      alert("Error: " + err.message);
     }
+  };
 
-    const updatedUser = await updateUserData(payload)
-    updateUser(updatedUser)
-    alert("Changes saved!")
-  } catch (err) {
-    console.error(err)
-    alert("Error: " + err.message)
-  }
-}
-
-  const [newIncome, setNewIncome] = useState()
-  const [incomeType, setIncomeType] = useState(incomeOptions[0])
-  const [newExpense, setNewExpense] = useState()
-  const [expenseType, setExpenseType] = useState(expenseOptions[0])
+  const [newIncome, setNewIncome] = useState();
+  const [incomeType, setIncomeType] = useState(incomeOptions[0]);
+  const [newExpense, setNewExpense] = useState();
+  const [expenseType, setExpenseType] = useState(expenseOptions[0]);
 
   const addIncome = () => {
     if (!newIncome) {
-      alert("Please input an income")
-      return
+      alert("Please input an income");
+      return;
     }
     if (incomeType === incomeOptions[0]) {
-      alert("Please select a type of income")
-      return
+      alert("Please select a type of income");
+      return;
     }
 
     const newIncomeObject = {
       type: incomeType,
-      amount: parseFloat(newIncome)
-    }
+      amount: parseFloat(newIncome),
+    };
 
-    const currentIncomes = income.slice(0, -1)
-    const oldTotal = income.at(-1)
-    const updatedIncomes = [...currentIncomes, newIncomeObject]
-    const newTotal = { type: "Total", amount: oldTotal.amount + newIncomeObject.amount }
-    setIncome([...updatedIncomes, newTotal])
-    setNewIncome("")
-  }
+    const currentIncomes = income.slice(0, -1);
+    const oldTotal = income.at(-1);
+    const updatedIncomes = [...currentIncomes, newIncomeObject];
+    const newTotal = {
+      type: "Total",
+      amount: oldTotal.amount + newIncomeObject.amount,
+    };
+    setIncome([...updatedIncomes, newTotal]);
+    setNewIncome("");
+  };
 
   const addExpense = () => {
     if (!newExpense) {
-      alert("Please input an expense")
-      return
+      alert("Please input an expense");
+      return;
     }
     if (expenseType === expenseOptions[0]) {
-      alert("Please select a type of expense")
-      return
+      alert("Please select a type of expense");
+      return;
     }
 
     const newExpenseObject = {
       type: expenseType,
-      amount: parseFloat(newExpense)
-    }
+      amount: parseFloat(newExpense),
+    };
 
-    const currentExpenses = expenses.slice(0, -1)
-    const oldTotal = expenses.at(-1)
-    const updatedExpenses = [...currentExpenses, newExpenseObject]
-    const newTotal = { type: "Total", amount: oldTotal.amount + newExpenseObject.amount }
-    setExpenses([...updatedExpenses, newTotal])
-    setNewExpense("")
-  }
+    const currentExpenses = expenses.slice(0, -1);
+    const oldTotal = expenses.at(-1);
+    const updatedExpenses = [...currentExpenses, newExpenseObject];
+    const newTotal = {
+      type: "Total",
+      amount: oldTotal.amount + newExpenseObject.amount,
+    };
+    setExpenses([...updatedExpenses, newTotal]);
+    setNewExpense("");
+  };
 
   const handleDelete = (typeFromDelete, target) => {
-    const updatedType = typeFromDelete.filter(type => { return type !== target })
-    const currentType = updatedType.slice(0, -1)
+    const updatedType = typeFromDelete.filter((type) => {
+      return type !== target;
+    });
+    const currentType = updatedType.slice(0, -1);
     const newTotalAmount = currentType.reduce((sum, item) => {
-      return sum + Number(item.amount)
-    }, 0)
+      return sum + Number(item.amount);
+    }, 0);
 
     const newTotalObject = {
       type: "Total",
-      amount: newTotalAmount
-    }
+      amount: newTotalAmount,
+    };
 
     if (typeFromDelete === income) {
-      setIncome([...currentType, newTotalObject])
+      setIncome([...currentType, newTotalObject]);
     } else if (typeFromDelete === expenses) {
-      setExpenses([...currentType, newTotalObject])
+      setExpenses([...currentType, newTotalObject]);
     }
-  }
+  };
 
   return (
     <Container>
       <IncAndExpContainer>
         <select
           value={incomeType}
-          style={{ height: "35px", width: "150px", borderRadius: "10px", marginRight: "10px" }}
+          style={{
+            height: "35px",
+            width: "150px",
+            borderRadius: "10px",
+            maxWidth: "90%",
+          }}
           onChange={(e) => setIncomeType(e.target.value)}
         >
           {incomeOptions.map((income) => (
@@ -222,7 +262,7 @@ const saveChanges = async () => {
         <input
           type="number"
           placeholder="Income amount"
-          style={{ height: "35px", borderRadius: "10px" }}
+          style={{ height: "35px", borderRadius: "10px", maxWidth: "90%" }}
           value={newIncome}
           onChange={(e) => setNewIncome(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && addIncome(newIncome)}
@@ -231,8 +271,13 @@ const saveChanges = async () => {
       <IncAndExpContainer>
         <select
           value={expenseType}
-          style={{ height: "35px", width: "150px", borderRadius: "10px", marginRight: "10px" }}
-          onChange={(e) => setExpenseType(e.target.value)}
+          style={{
+            height: "35px",
+            width: "150px",
+            borderRadius: "10px",
+            maxWidth: "90%",
+          }}
+          onChange={(e) => setIncomeType(e.target.value)}
         >
           {expenseOptions.map((income) => (
             <option key={income}>{income}</option>
@@ -241,10 +286,10 @@ const saveChanges = async () => {
         <input
           type="number"
           placeholder="Expense amount"
-          style={{ height: "35px", borderRadius: "10px" }}
-          value={newExpense}
-          onChange={(e) => setNewExpense(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addExpense(newExpense)}
+          style={{ height: "35px", borderRadius: "10px", maxWidth: "90%" }}
+          value={newIncome}
+          onChange={(e) => setNewIncome(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && addIncome(newIncome)}
         />
       </IncAndExpContainer>
 
@@ -261,7 +306,7 @@ const saveChanges = async () => {
 
       <SaveButton onClick={saveChanges}>Save changes on Database</SaveButton>
     </Container>
-  )
-}
+  );
+};
 
-export default Expenses
+export default Expenses;

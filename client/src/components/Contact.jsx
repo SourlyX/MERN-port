@@ -3,10 +3,11 @@ import styled from 'styled-components'
 import emailjs from '@emailjs/browser'
 
 const Container = styled.div`
-  width: 98%;
+  width: 100%;
   flex-direction: column;
   align-items: center;
   display: flex;
+  box-sizing: border-box;
 `
 
 const ContactContainer = styled.div`
@@ -18,6 +19,12 @@ const ContactContainer = styled.div`
   align-items: center;
   width: 100%;
   max-width: 350px;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    padding: 20px;
+    max-width: 95%;
+  }
 `
 
 const Title = styled.h2`
@@ -34,6 +41,11 @@ const Form = styled.form`
   max-width: 600px;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    padding: 15px;
+  }
 `
 
 const Input = styled.input`
