@@ -61,7 +61,7 @@ function App() {
             rel="stylesheet"
           />
         </HelmetProvider>
-        
+
         <RouteScrollToTop />
 
         <Navbar items={data.navbarItems}
@@ -96,23 +96,23 @@ function App() {
           <Route path="/projects/pokedex" element={<Pokedex />} />
           <Route
             path="/projects/incomes&expenses"
-            element={<Expenses/>}
+            element={<Expenses />}
           />
 
           <Route path="/login" element={<RedirectIfAuth>
             <Login toastVisibility={setToastVisibility}
-          setMessage={setToastMessage} /> </RedirectIfAuth>} />
+              setMessage={setToastMessage} /> </RedirectIfAuth>} />
           <Route path="/register" element={<RedirectIfAuth>
             <Register toastVisibility={setToastVisibility}
-            setMessage={setToastMessage} />
-            </RedirectIfAuth>} />
+              setMessage={setToastMessage} />
+          </RedirectIfAuth>} />
 
           <Route path="*" element={<PageNotFound />} />
         </Routes>
 
         <Contact ref={contactRef}
-        toastVisibility={setToastVisibility}
-        setMessage={setToastMessage} />
+          toastVisibility={setToastVisibility}
+          setMessage={setToastMessage} />
 
         {toastVisibility ? <Toast setVisibility={setToastVisibility} message={toastMessage} /> : null}
         <Footer />

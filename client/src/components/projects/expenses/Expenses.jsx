@@ -1,5 +1,3 @@
-// src/components/projects/expenses/Expenses.jsx
-
 import { useState, useContext, useEffect } from "react"
 import { AuthContext } from "../../../context/AuthContext"
 import { updateUserData } from "../../../api/users"
@@ -45,6 +43,35 @@ const SaveButton = styled.button`
   }
 `
 
+// ─── Utilidad: calcular la quincena actual ───
+const getCurrentQuincena = () => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const year = today.getFullYear()
+  const month = today.getMonth()
+  const day = today.getDate()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+  if (day <= 15) {
+    return [new Date(year, month, 1), new Date(year, month, 15)]
+  } else {
+    return [new Date(year, month, 16), new Date(year, month, daysInMonth)]
+  }
+}
+
+// ─── Utilidad: verificar si "hoy" está dentro del rango ───
+const isTodayInRange = (start, end) => {
+  if (!start || !end) return false
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const s = new Date(start)
+  s.setHours(0, 0, 0, 0)
+  const e = new Date(end)
+  e.setHours(0, 0, 0, 0)
+  return today >= s && today <= e
+}
+
 const Expenses = () => {
   const { user, isAuthenticated, updateUser } = useContext(AuthContext)
 
@@ -80,12 +107,23 @@ const Expenses = () => {
     if (isAuthenticated && user) {
       setIncome(user.incomes && user.incomes.length > 0 ? user.incomes : defaultIncome)
       setExpenses(user.expenses && user.expenses.length > 0 ? user.expenses : defaultExpenses)
+
+      // ─── Lógica de auto-ajuste del periodo guardado ───
       if (user.payInfo?.paymentDates?.length === 2) {
-        setDateRange([
-          new Date(user.payInfo.paymentDates[0]),
-          new Date(user.payInfo.paymentDates[1])
-        ])
+        const savedStart = new Date(user.payInfo.paymentDates[0])
+        const savedEnd = new Date(user.payInfo.paymentDates[1])
+
+        if (isTodayInRange(savedStart, savedEnd)) {
+          // ✅ Está dentro del periodo guardado → usar tal cual
+          setDateRange([savedStart, savedEnd])
+        } else {
+          // ⚠️ Fuera del periodo → mover automáticamente a la quincena actual
+          const [qStart, qEnd] = getCurrentQuincena()
+          setDateRange([qStart, qEnd])
+          console.log("📅 Payroll period auto-adjusted to current quincena:", qStart, "→", qEnd)
+        }
       }
+
       if (user.payInfo) {
         setSalaryData({
           grossSalary: user.payInfo.grossSalary || "",
@@ -100,14 +138,23 @@ const Expenses = () => {
 
   const saveChanges = async () => {
     try {
-      // Validar periodo si es salaried
       if (salaryData.isSalaried) {
         if (!dateRange[0] || !dateRange[1]) {
           alert("⚠️ Please select a payroll period before saving.")
           return
         }
-        const today = new Date()
-        if (today < dateRange[0] || today > dateRange[1]) {
+
+        // Validar que el rango sea ~15 días (con tolerancia para febrero)
+        const diffDays = Math.round(
+          (dateRange[1] - dateRange[0]) / (1000 * 60 * 60 * 24)
+        ) + 1 // +1 porque incluye ambos días
+
+        if (diffDays < 13 || diffDays > 16) {
+          alert(`⚠️ Payroll period must be approximately 15 days (got ${diffDays} days).`)
+          return
+        }
+
+        if (!isTodayInRange(dateRange[0], dateRange[1])) {
           alert("⚠️ Cannot save: current date is outside the payroll period.")
           return
         }
