@@ -99,7 +99,7 @@ const Expenses = () => {
   const initialLoadDone = useRef(false);
   useEffect(() => {
     if (!isAuthenticated || !user) return
-    if (initialLoadDone.current) return  // ← solo carga una vez
+    if (initialLoadDone.current) return
 
     initialLoadDone.current = true
 
@@ -145,8 +145,8 @@ const Expenses = () => {
             paymentDates: dateRange,
             grossSalary: salaryData.grossSalary,
             taxes: salaryData.taxes,
-            vto: salaryData.vto,
-            ot: salaryData.ot,
+            vto: 0,
+            ot: 0,
             isSalaried: salaryData.isSalaried,
             cutDays: salaryData.cutDays,
           },
@@ -160,6 +160,11 @@ const Expenses = () => {
     }
 
     autoSave()
+  }, [dateRange])
+
+  useEffect(() => {
+    if (!initialLoadDone.current) return
+    setSalaryData(prev => ({ ...prev, vto: 0, ot: 0 }))
   }, [dateRange])
 
   const saveChanges = async () => {
