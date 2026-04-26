@@ -5,7 +5,6 @@ export const AuthContext = createContext()
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const initAuth = async () => {
@@ -40,7 +39,6 @@ export const AuthProvider = ({ children }) => {
           localStorage.removeItem('accessToken')
         }
       }
-      setLoading(false)
     }
 
     initAuth()
@@ -60,7 +58,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, setUser, isAuthenticated, loading, updateUser, logout }}>
+    <AuthContext.Provider value={{ user, setUser, isAuthenticated, updateUser, logout }}>
       {children}
     </AuthContext.Provider>
   )
