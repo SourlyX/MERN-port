@@ -1,31 +1,74 @@
-const express = require('express');
-const router = express.Router();
-const { protect } = require('../middleware/protect')
-const { registerUser, loginUser, refreshToken, updateUserData, getUserData } = require('../controllers/userController'); 
+const refreshAccessToken = async () => {
+  const res = await fetch('/api/users/refresh', {
+    method: 'POST',
+    credentials: 'include',
+  });
 
-// @desc    Registrar un nuevo usuario
-// @route   POST /api/users/register
-// @access  Public
-router.post('/register', registerUser);
+  if (!res.ok) throw new Error("Session expired. Please log in again.");
 
-// @desc    Autenticar un usuario
-// @route   POST /api/users/login
-// @access  Public
-router.post('/login', loginUser);
+  const data = await res.json();
+  localStorage.setItem('accessToken', data.accessToken);
+  return data.accessToken;
+};
 
-// @desc    Renovar access token usando refresh token
-// @route   POST /api/users/refresh
-// @access  Public
-router.post('/refresh', refreshToken);
+export const updateUserData = async (payload) => {
+  let token = localStorage.getItem('accessToken');
 
-// @desc    Actualizar incomes, expenses y payInfo de usuario loggeado
-// @route   PUT /api/users/update
-// @access  Private
-router.put('/update', protect, updateUserData);
+  if (!token) {
+    throw new Error("No token found. Please log in again.");
+  }
 
-// @desc    Obtener data del usuario loggeado
-// @route   GET /api/users/me
-// @access  Private
-router.get('/me', protect, getUserData);
+  let res = await fetch('/api/users/update', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    credentials: 'include',
+    body: JSON.stringify(payload),
+  });
 
-module.exports = router;
+  if (res.status === 401) {
+    try {
+      token = await refreshAccessToken();
+      res = await fetch('/api/users/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      throw new Error("Session expired. Please log in again.");
+    }
+  }
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Error al actualizar usuario');
+  return data.data;
+};
+
+export const fetchUserData = async () => {
+  let token = localStorage.getItem('accessToken');
+
+  if (!token) throw new Error("No token found");
+
+  let res = await fetch('/api/users/me', {
+    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include',
+  });
+
+  if (res.status === 401) {
+    token = await refreshAccessToken();
+    res = await fetch('/api/users/me', {
+      headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include',
+    });
+  }
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message);
+  return data.data;
+};
