@@ -123,6 +123,40 @@ const Expenses = () => {
     }
   }, [isAuthenticated, user]);
 
+  useEffect(() => {
+    if (!isAuthenticated || !dateRange[0] || !dateRange[1]) return
+    if (!user?.payInfo?.paymentDates?.length) return
+
+    const savedStart = new Date(user.payInfo.paymentDates[0]).getTime()
+    const currentStart = new Date(dateRange[0]).getTime()
+
+    if (savedStart === currentStart) return
+
+    const autoSave = async () => {
+      try {
+        const payload = {
+          incomes: income,
+          expenses: expenses,
+          payInfo: {
+            paymentDates: dateRange,
+            grossSalary: salaryData.grossSalary,
+            taxes: salaryData.taxes,
+            vto: salaryData.vto,
+            ot: salaryData.ot,
+            isSalaried: salaryData.isSalaried,
+          },
+        }
+        const updatedUser = await updateUserData(payload)
+        updateUser(updatedUser)
+        console.log("✅ Periodo auto-guardado")
+      } catch (err) {
+        console.error("Error al auto-guardar periodo:", err)
+      }
+    }
+
+    autoSave()
+  }, [dateRange])
+
   const saveChanges = async () => {
     try {
       if (salaryData.isSalaried) {
