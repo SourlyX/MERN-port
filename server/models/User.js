@@ -24,7 +24,7 @@ const transactionSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
-  breakDown: [breakdownItemSchema] 
+  breakDown: [breakdownItemSchema]
 });
 
 // 2. Esquema para las Tareas (Todos)
@@ -70,6 +70,10 @@ const payInfoSchema = new mongoose.Schema({
   isSalaried: {
     type: Boolean,
     default: false
+  },
+  cutDays: {
+    type: [Number],
+    default: [1, 16],
   }
 });
 
@@ -97,7 +101,7 @@ const userSchema = new mongoose.Schema({
   payInfo: payInfoSchema,
 });
 
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
   }

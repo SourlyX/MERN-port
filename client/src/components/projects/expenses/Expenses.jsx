@@ -164,6 +164,36 @@ const Expenses = () => {
 
   useEffect(() => {
     if (!initialLoadDone.current) return
+    if (!isAuthenticated || !dateRange[0] || !dateRange[1]) return
+
+    const autoSave = async () => {
+      try {
+        const payload = {
+          incomes: income,
+          expenses: expenses,
+          payInfo: {
+            paymentDates: dateRange,
+            grossSalary: salaryData.grossSalary,
+            taxes: salaryData.taxes,
+            vto: salaryData.vto,
+            ot: salaryData.ot,
+            isSalaried: salaryData.isSalaried,
+            cutDays: salaryData.cutDays,
+          },
+        }
+        const updatedUser = await updateUserData(payload)
+        updateUser(updatedUser)
+        console.log("✅ CutDays auto-guardados")
+      } catch (err) {
+        console.error("Error al auto-guardar cutDays:", err)
+      }
+    }
+
+    autoSave()
+  }, [salaryData.cutDays[0], salaryData.cutDays[1]])
+
+  useEffect(() => {
+    if (!initialLoadDone.current) return
     setSalaryData(prev => ({ ...prev, vto: 0, ot: 0 }))
   }, [dateRange])
 
