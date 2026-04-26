@@ -46,6 +46,29 @@ export const updateUserData = async (payload) => {
     }
   }
 
+  export const fetchUserData = async () => {
+    let token = localStorage.getItem('accessToken')
+
+    if (!token) throw new Error("No token found")
+
+    let res = await fetch('/api/users/me', {
+      headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include',
+    })
+
+    if (res.status === 401) {
+      token = await refreshAccessToken()
+      res = await fetch('/api/users/me', {
+        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
+      })
+    }
+
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.message)
+    return data.data
+  }
+
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || 'Error al actualizar usuario');
   return data.data;

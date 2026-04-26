@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/protect')
-const { registerUser, loginUser, refreshToken, updateUserData } = require('../controllers/userController'); 
+const { registerUser, loginUser, refreshToken, updateUserData, getUserData } = require('../controllers/userController'); 
 
 // @desc    Registrar un nuevo usuario
 // @route   POST /api/users/register
@@ -22,5 +22,10 @@ router.post('/refresh', refreshToken);
 // @route   PUT /api/users/update
 // @access  Private
 router.put('/update', protect, updateUserData);
+
+// @desc    Obtener data del usuario loggeado
+// @route   GET /api/users/me
+// @access  Private
+router.get('/me', protect, getUserData);
 
 module.exports = router;
