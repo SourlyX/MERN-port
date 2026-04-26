@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 import { AuthContext } from "../../../context/AuthContext";
 import { updateUserData } from "../../../api/users";
 import IncomeFlow from "./IncomeFlow";
@@ -93,33 +93,37 @@ const Expenses = () => {
     vto: "",
     ot: "",
     isSalaried: null,
+    cutDays: [1, 16], // default
   });
 
+  const initialLoadDone = useRef(false);
   useEffect(() => {
-    if (isAuthenticated && user) {
-      setIncome(
-        user.incomes && user.incomes.length > 0 ? user.incomes : defaultIncome,
-      );
-      setExpenses(
-        user.expenses && user.expenses.length > 0
-          ? user.expenses
-          : defaultExpenses,
-      );
-      if (user.payInfo?.paymentDates?.length === 2) {
-        setDateRange([
-          new Date(user.payInfo.paymentDates[0]),
-          new Date(user.payInfo.paymentDates[1]),
-        ]);
-      }
-      if (user.payInfo) {
-        setSalaryData({
-          grossSalary: user.payInfo.grossSalary || "",
-          taxes: user.payInfo.taxes || 0,
-          vto: user.payInfo.vto || "",
-          ot: user.payInfo.ot || "",
-          isSalaried: !!user.payInfo.isSalaried,
-        });
-      }
+    if (!isAuthenticated || !user) return
+    if (initialLoadDone.current) return  // ← solo carga una vez
+
+    initialLoadDone.current = true
+
+    setIncome(
+      user.incomes && user.incomes.length > 0 ? user.incomes : defaultIncome
+    );
+    setExpenses(
+      user.expenses && user.expenses.length > 0 ? user.expenses : defaultExpenses
+    );
+    if (user.payInfo?.paymentDates?.length === 2) {
+      setDateRange([
+        new Date(user.payInfo.paymentDates[0]),
+        new Date(user.payInfo.paymentDates[1]),
+      ]);
+    }
+    if (user.payInfo) {
+      setSalaryData({
+        grossSalary: user.payInfo.grossSalary || "",
+        taxes: user.payInfo.taxes || 0,
+        vto: user.payInfo.vto || "",
+        ot: user.payInfo.ot || "",
+        isSalaried: !!user.payInfo.isSalaried,
+        cutDays: user.payInfo.cutDays || [1, 16],
+      });
     }
   }, [isAuthenticated, user]);
 
@@ -144,6 +148,7 @@ const Expenses = () => {
             vto: salaryData.vto,
             ot: salaryData.ot,
             isSalaried: salaryData.isSalaried,
+            cutDays: salaryData.cutDays,
           },
         }
         const updatedUser = await updateUserData(payload)
@@ -170,12 +175,13 @@ const Expenses = () => {
         incomes: income,
         expenses: expenses,
         payInfo: {
-          paymentDates: dateRange.filter((d) => d !== null),
+          paymentDates: dateRange,
           grossSalary: salaryData.grossSalary,
           taxes: salaryData.taxes,
           vto: salaryData.vto,
           ot: salaryData.ot,
           isSalaried: salaryData.isSalaried,
+          cutDays: salaryData.cutDays,
         },
       };
 

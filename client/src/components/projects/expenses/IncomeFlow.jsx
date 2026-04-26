@@ -145,11 +145,38 @@ const IncomeFlow = ({ income, setIncome, dateRange, setDateRange, salaryData, se
 
       {isSalaried && (
         <>
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            <label>Pay periods start on days:</label>
+            <input
+              type="number"
+              min={1}
+              max={28}
+              value={salaryData.cutDays[0]}
+              style={{ width: "50px", height: "35px", borderRadius: "10px", textAlign: "center" }}
+              onChange={(e) => {
+                const val = parseInt(e.target.value) || 1
+                setSalaryData(prev => ({ ...prev, cutDays: [val, prev.cutDays[1]] }))
+              }}
+            />
+            <span>and</span>
+            <input
+              type="number"
+              min={1}
+              max={28}
+              value={salaryData.cutDays[1]}
+              style={{ width: "50px", height: "35px", borderRadius: "10px", textAlign: "center" }}
+              onChange={(e) => {
+                const val = parseInt(e.target.value) || 16
+                setSalaryData(prev => ({ ...prev, cutDays: [prev.cutDays[0], val] }))
+              }}
+            />
+          </div>
           <PeriodSelector
             calendarName={"🗓️ Current Payroll Period"}
             selectorName={"Payroll period"}
             dateRange={dateRange}
             setDateRange={setDateRange}
+            cutDays={salaryData.cutDays}
           />
           <IncomeContainer>
             <QS>How much is your gross salary?</QS>
