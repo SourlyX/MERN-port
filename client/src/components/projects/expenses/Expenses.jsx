@@ -97,7 +97,7 @@ const Expenses = () => {
   });
 
   const initialLoadDone = useRef(false);
-  const initialDateSet = useRef(false);
+  const lastSavedPeriodStart = useRef(null);
   useEffect(() => {
     if (!isAuthenticated || !user) return;
     if (initialLoadDone.current) return;
@@ -131,41 +131,6 @@ const Expenses = () => {
   }, [isAuthenticated, user]);
 
   useEffect(() => {
-    if (!isAuthenticated || !dateRange[0] || !dateRange[1]) return;
-    if (!user?.payInfo?.paymentDates?.length) return;
-
-    const savedStart = new Date(user.payInfo.paymentDates[0]).getTime();
-    const currentStart = new Date(dateRange[0]).getTime();
-
-    if (savedStart === currentStart) return;
-
-    const autoSave = async () => {
-      try {
-        const payload = {
-          incomes: income,
-          expenses: expenses,
-          payInfo: {
-            paymentDates: dateRange,
-            grossSalary: salaryData.grossSalary,
-            taxes: salaryData.taxes,
-            vto: 0,
-            ot: 0,
-            isSalaried: salaryData.isSalaried,
-            cutDays: salaryData.cutDays,
-          },
-        };
-        const updatedUser = await updateUserData(payload);
-        updateUser(updatedUser);
-        console.log("✅ Periodo auto-guardado");
-      } catch (err) {
-        console.error("Error al auto-guardar periodo:", err);
-      }
-    };
-
-    autoSave();
-  }, [dateRange]);
-
-  useEffect(() => {
     if (!initialLoadDone.current) return;
     if (!isAuthenticated || !dateRange[0] || !dateRange[1]) return;
 
@@ -195,16 +160,45 @@ const Expenses = () => {
     autoSave();
   }, [salaryData.cutDays[0], salaryData.cutDays[1]]);
 
-  // Reset VTO/OT cuando cambia el periodo (pero NO en la carga inicial)
   useEffect(() => {
     if (!initialLoadDone.current) return;
+    if (!isAuthenticated || !dateRange[0] || !dateRange[1]) return;
 
-    if (!initialDateSet.current) {
-      initialDateSet.current = true;
+    const currentKey = `${dateRange[0].getFullYear()}-${dateRange[0].getMonth()}-${dateRange[0].getDate()}`;
+
+    if (lastSavedPeriodStart.current === null) {
+      lastSavedPeriodStart.current = currentKey;
       return;
     }
 
+    if (currentKey === lastSavedPeriodStart.current) return;
+
+    lastSavedPeriodStart.current = currentKey;
     setSalaryData((prev) => ({ ...prev, vto: 0, ot: 0 }));
+
+    const autoSave = async () => {
+      try {
+        const payload = {
+          incomes: income,
+          expenses: expenses,
+          payInfo: {
+            paymentDates: dateRange,
+            grossSalary: salaryData.grossSalary,
+            taxes: salaryData.taxes,
+            vto: 0,
+            ot: 0,
+            isSalaried: salaryData.isSalaried,
+            cutDays: salaryData.cutDays,
+          },
+        };
+        const updatedUser = await updateUserData(payload);
+        updateUser(updatedUser);
+        console.log("✅ Periodo auto-guardado (VTO/OT reseteados)");
+      } catch (err) {
+        console.error("Error al auto-guardar periodo:", err);
+      }
+    };
+    autoSave();
   }, [dateRange]);
 
   const saveChanges = async () => {
