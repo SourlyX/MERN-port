@@ -130,16 +130,6 @@ const Expenses = () => {
           alert("Please select a payroll period before saving.");
           return;
         }
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const start = new Date(dateRange[0]);
-        start.setHours(0, 0, 0, 0);
-        const end = new Date(dateRange[1]);
-        end.setHours(23, 59, 59, 999);
-        if (today < start || today > end) {
-          alert("Cannot save: current date is outside the payroll period.");
-          return;
-        }
       }
 
       const payload = {
@@ -277,19 +267,19 @@ const Expenses = () => {
             borderRadius: "10px",
             maxWidth: "90%",
           }}
-          onChange={(e) => setIncomeType(e.target.value)}
+          onChange={(e) => setExpenseType(e.target.value)}
         >
-          {expenseOptions.map((income) => (
-            <option key={income}>{income}</option>
+          {expenseOptions.map((expense) => (
+            <option key={expense}>{expense}</option>
           ))}
         </select>
         <input
           type="number"
           placeholder="Expense amount"
           style={{ height: "35px", borderRadius: "10px", maxWidth: "90%" }}
-          value={newIncome}
-          onChange={(e) => setNewIncome(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addIncome(newIncome)}
+          value={newExpense}
+          onChange={(e) => setNewExpense(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && addExpense(newExpense)}
         />
       </IncAndExpContainer>
 
