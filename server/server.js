@@ -33,7 +33,7 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error('Error de conexión a MongoDB:', err));
 
 // Rutas API
-const userRoutes = require('./routes/users');
+const { router: userRoutes } = require('./routes/users');
 app.use('/api/users', userRoutes);
 
 // Servir React en producción

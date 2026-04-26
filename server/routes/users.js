@@ -28,4 +28,4 @@ router.put('/update', protect, updateUserData);
 // @access  Private
 router.get('/me', protect, getUserData);
 
-module.exports = router;
+module.exports = { router, updateUserData };

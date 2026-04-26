@@ -97,17 +97,20 @@ const Expenses = () => {
   });
 
   const initialLoadDone = useRef(false);
+  const initialDateSet = useRef(false);
   useEffect(() => {
-    if (!isAuthenticated || !user) return
-    if (initialLoadDone.current) return
+    if (!isAuthenticated || !user) return;
+    if (initialLoadDone.current) return;
 
-    initialLoadDone.current = true
+    initialLoadDone.current = true;
 
     setIncome(
-      user.incomes && user.incomes.length > 0 ? user.incomes : defaultIncome
+      user.incomes && user.incomes.length > 0 ? user.incomes : defaultIncome,
     );
     setExpenses(
-      user.expenses && user.expenses.length > 0 ? user.expenses : defaultExpenses
+      user.expenses && user.expenses.length > 0
+        ? user.expenses
+        : defaultExpenses,
     );
     if (user.payInfo?.paymentDates?.length === 2) {
       setDateRange([
@@ -128,13 +131,13 @@ const Expenses = () => {
   }, [isAuthenticated, user]);
 
   useEffect(() => {
-    if (!isAuthenticated || !dateRange[0] || !dateRange[1]) return
-    if (!user?.payInfo?.paymentDates?.length) return
+    if (!isAuthenticated || !dateRange[0] || !dateRange[1]) return;
+    if (!user?.payInfo?.paymentDates?.length) return;
 
-    const savedStart = new Date(user.payInfo.paymentDates[0]).getTime()
-    const currentStart = new Date(dateRange[0]).getTime()
+    const savedStart = new Date(user.payInfo.paymentDates[0]).getTime();
+    const currentStart = new Date(dateRange[0]).getTime();
 
-    if (savedStart === currentStart) return
+    if (savedStart === currentStart) return;
 
     const autoSave = async () => {
       try {
@@ -150,21 +153,21 @@ const Expenses = () => {
             isSalaried: salaryData.isSalaried,
             cutDays: salaryData.cutDays,
           },
-        }
-        const updatedUser = await updateUserData(payload)
-        updateUser(updatedUser)
-        console.log("✅ Periodo auto-guardado")
+        };
+        const updatedUser = await updateUserData(payload);
+        updateUser(updatedUser);
+        console.log("✅ Periodo auto-guardado");
       } catch (err) {
-        console.error("Error al auto-guardar periodo:", err)
+        console.error("Error al auto-guardar periodo:", err);
       }
-    }
+    };
 
-    autoSave()
-  }, [dateRange])
+    autoSave();
+  }, [dateRange]);
 
   useEffect(() => {
-    if (!initialLoadDone.current) return
-    if (!isAuthenticated || !dateRange[0] || !dateRange[1]) return
+    if (!initialLoadDone.current) return;
+    if (!isAuthenticated || !dateRange[0] || !dateRange[1]) return;
 
     const autoSave = async () => {
       try {
@@ -180,22 +183,29 @@ const Expenses = () => {
             isSalaried: salaryData.isSalaried,
             cutDays: salaryData.cutDays,
           },
-        }
-        const updatedUser = await updateUserData(payload)
-        updateUser(updatedUser)
-        console.log("✅ CutDays auto-guardados")
+        };
+        const updatedUser = await updateUserData(payload);
+        updateUser(updatedUser);
+        console.log("✅ CutDays auto-guardados");
       } catch (err) {
-        console.error("Error al auto-guardar cutDays:", err)
+        console.error("Error al auto-guardar cutDays:", err);
       }
+    };
+
+    autoSave();
+  }, [salaryData.cutDays[0], salaryData.cutDays[1]]);
+
+  // Reset VTO/OT cuando cambia el periodo (pero NO en la carga inicial)
+  useEffect(() => {
+    if (!initialLoadDone.current) return;
+
+    if (!initialDateSet.current) {
+      initialDateSet.current = true;
+      return;
     }
 
-    autoSave()
-  }, [salaryData.cutDays[0], salaryData.cutDays[1]])
-
-  useEffect(() => {
-    if (!initialLoadDone.current) return
-    setSalaryData(prev => ({ ...prev, vto: 0, ot: 0 }))
-  }, [dateRange])
+    setSalaryData((prev) => ({ ...prev, vto: 0, ot: 0 }));
+  }, [dateRange]);
 
   const saveChanges = async () => {
     try {
