@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-//Esquema para el desglose que va DENTRO de un ingreso
+// Esquema para el desglose que va DENTRO de un ingreso
 const breakdownItemSchema = new mongoose.Schema({
   label: {
     type: String,
@@ -74,6 +74,12 @@ const payInfoSchema = new mongoose.Schema({
   cutDays: {
     type: [Number],
     default: [1, 16],
+  },
+  workdayHours: {       // ✅ Nuevo campo
+    type: Number,
+    default: 8,
+    min: 1,
+    max: 24
   }
 });
 

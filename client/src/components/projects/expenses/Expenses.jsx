@@ -120,7 +120,8 @@ const Expenses = () => {
     vto: "",
     ot: "",
     isSalaried: null,
-    cutDays: [1, 16], // Días de corte por defecto
+    cutDays: [1, 16],
+    workdayHours: 8, // Horas trabajadas en un día laboral (valor por defecto)
   });
 
   /* -------------------- Referencias -------------------- */
@@ -130,6 +131,24 @@ const Expenses = () => {
 
   /** Almacena la clave del último período guardado para evitar guardados duplicados */
   const lastSavedPeriodStart = useRef(null);
+
+  /* -------------------- Helpers -------------------- */
+
+  /**
+   * Construye el payload para enviar a la API.
+   * Centraliza la estructura para evitar repetición.
+   * @param {Object} overrides - Campos opcionales para sobreescribir valores de salaryData.
+   * @returns {Object} Payload listo para enviar a la API.
+   */
+  const buildPayload = (overrides = {}) => ({
+    incomes: income,
+    expenses: expenses,
+    payInfo: {
+      ...salaryData,
+      paymentDates: dateRange,
+      ...overrides,
+    },
+  });
 
   /* -------------------- Efectos -------------------- */
 
@@ -167,6 +186,7 @@ const Expenses = () => {
         ot: user.payInfo.ot || "",
         isSalaried: !!user.payInfo.isSalaried,
         cutDays: user.payInfo.cutDays || [1, 16],
+        workdayHours: user.payInfo.workdayHours || 8,
       });
     }
   }, [isAuthenticated, user]);
@@ -181,19 +201,7 @@ const Expenses = () => {
 
     const autoSave = async () => {
       try {
-        const payload = {
-          incomes: income,
-          expenses: expenses,
-          payInfo: {
-            paymentDates: dateRange,
-            grossSalary: salaryData.grossSalary,
-            taxes: salaryData.taxes,
-            vto: salaryData.vto,
-            ot: salaryData.ot,
-            isSalaried: salaryData.isSalaried,
-            cutDays: salaryData.cutDays,
-          },
-        };
+        const payload = buildPayload();
         const updatedUser = await updateUserData(payload);
         updateUser(updatedUser);
         console.log("✅ CutDays auto-guardados");
@@ -231,19 +239,7 @@ const Expenses = () => {
 
     const autoSave = async () => {
       try {
-        const payload = {
-          incomes: income,
-          expenses: expenses,
-          payInfo: {
-            paymentDates: dateRange,
-            grossSalary: salaryData.grossSalary,
-            taxes: salaryData.taxes,
-            vto: 0,
-            ot: 0,
-            isSalaried: salaryData.isSalaried,
-            cutDays: salaryData.cutDays,
-          },
-        };
+        const payload = buildPayload({ vto: 0, ot: 0 });
         const updatedUser = await updateUserData(payload);
         updateUser(updatedUser);
         console.log("✅ Periodo auto-guardado (VTO/OT reseteados)");
@@ -270,20 +266,7 @@ const Expenses = () => {
         }
       }
 
-      const payload = {
-        incomes: income,
-        expenses: expenses,
-        payInfo: {
-          paymentDates: dateRange,
-          grossSalary: salaryData.grossSalary,
-          taxes: salaryData.taxes,
-          vto: salaryData.vto,
-          ot: salaryData.ot,
-          isSalaried: salaryData.isSalaried,
-          cutDays: salaryData.cutDays,
-        },
-      };
-
+      const payload = buildPayload();
       const updatedUser = await updateUserData(payload);
       updateUser(updatedUser);
       alert("Changes saved!");

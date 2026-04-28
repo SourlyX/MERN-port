@@ -78,6 +78,7 @@ const IncomeFlow = ({ income, setIncome, dateRange, setDateRange, salaryData, se
   const taxes = salaryData.taxes;
   const VTO = salaryData.vto;
   const OT = salaryData.ot;
+  const workdayHours = salaryData.workdayHours;
 
   /**
    * Actualiza un campo específico dentro del objeto salaryData
@@ -91,12 +92,13 @@ const IncomeFlow = ({ income, setIncome, dateRange, setDateRange, salaryData, se
 
   /**
    * Efecto que recalcula el salario neto cada vez que cambian
-   * el salario bruto, impuestos, VTO, OT o el estado de asalariado.
+   * el salario bruto, impuestos, VTO, OT, horas laborales o el estado de asalariado.
    * Genera un desglose detallado y actualiza el estado de ingresos.
    */
   useEffect(() => {
-    // Si no hay salario o el usuario no es asalariado, no calcular
-    if (!newSalary || !isSalaried) return;
+    // Si no hay salario, el usuario no es asalariado o workdayHours es inválido, no calcular
+    const parsedHours = parseFloat(workdayHours);
+    if (!newSalary || !isSalaried || !parsedHours || parsedHours <= 0) return;
 
     // Parseo seguro de los valores numéricos
     const salary = parseFloat(newSalary) || 0;
@@ -125,8 +127,8 @@ const IncomeFlow = ({ income, setIncome, dateRange, setDateRange, salaryData, se
       return;
     }
 
-    // Cálculo del pago por minuto (salario quincenal / 6 días / 60 min)
-    const minutePay = salary / 15 / 6 / 60;
+    // Cálculo del pago por minuto (salario quincenal / días laborales / horas por día / 60 min)
+    const minutePay = salary / 15 / parsedHours / 60;
 
     // Deducción por tiempo no remunerado
     const vtoDeduction = minutePay * vtoMin;
@@ -179,7 +181,7 @@ const IncomeFlow = ({ income, setIncome, dateRange, setDateRange, salaryData, se
         { type: "Total", amount: parseFloat(totalAmount.toFixed(2)) }
       ];
     });
-  }, [newSalary, taxes, VTO, OT, isSalaried]);
+  }, [newSalary, taxes, VTO, OT, isSalaried, workdayHours]);
 
   /**
    * Retorna el valor actual del desplegable según el estado de isSalaried.
@@ -259,6 +261,19 @@ const IncomeFlow = ({ income, setIncome, dateRange, setDateRange, salaryData, se
               placeholder="Salary"
               value={newSalary}
               onChange={(e) => updateField('grossSalary', e.target.value)}
+            />
+          </IncomeContainer>
+
+          {/* Input para las horas trabajadas en un día laboral */}
+          <IncomeContainer>
+            <QS>How many hours do you work per day?</QS>
+            <Input
+              type="number"
+              min="1"
+              max="24"
+              placeholder="Workday Hours"
+              value={workdayHours}
+              onChange={(e) => updateField('workdayHours', parseFloat(e.target.value) || 8)}
             />
           </IncomeContainer>
         </>
