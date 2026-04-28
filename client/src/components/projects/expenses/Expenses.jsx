@@ -1,3 +1,11 @@
+/**
+ * Expenses.jsx
+ * Componente principal para la gestión de ingresos y gastos del usuario.
+ * Permite agregar, eliminar y guardar ingresos/gastos, así como configurar
+ * datos salariales y períodos de pago. Los cambios se sincronizan con la
+ * base de datos a través de la API de usuarios.
+ */
+
 import { useState, useContext, useEffect, useRef } from "react";
 import { AuthContext } from "../../../context/AuthContext";
 import { updateUserData } from "../../../api/users";
@@ -5,6 +13,9 @@ import IncomeFlow from "./IncomeFlow";
 import Tables from "./Tables";
 import styled from "styled-components";
 
+/* ======================== Styled Components ======================== */
+
+/** Contenedor principal con layout vertical centrado */
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -19,6 +30,7 @@ const Container = styled.div`
   }
 `;
 
+/** Contenedor horizontal para los inputs de ingresos y gastos */
 const IncAndExpContainer = styled.div`
   display: flex;
   align-items: center;
@@ -27,6 +39,7 @@ const IncAndExpContainer = styled.div`
   width: auto;
 `;
 
+/** Botón estilizado para guardar cambios en la base de datos */
 const SaveButton = styled.button`
   padding: 10px 20px;
   border-radius: 10px;
@@ -43,9 +56,15 @@ const SaveButton = styled.button`
   }
 `;
 
+/* ======================== Componente Principal ======================== */
+
 const Expenses = () => {
+  // Contexto de autenticación para acceder a datos del usuario
   const { user, isAuthenticated, updateUser } = useContext(AuthContext);
 
+  /* -------------------- Opciones de selección -------------------- */
+
+  /** Tipos de ingreso disponibles en el dropdown */
   const incomeOptions = [
     "Choose one type of income",
     "Dividend",
@@ -54,6 +73,8 @@ const Expenses = () => {
     "Extra",
     "Other",
   ];
+
+  /** Tipos de gasto disponibles en el dropdown */
   const expenseOptions = [
     "Choose one type of expense",
     "Dwelling",
@@ -71,11 +92,15 @@ const Expenses = () => {
     "Clothing",
   ];
 
+  /* -------------------- Valores por defecto -------------------- */
+
+  /** Ingresos iniciales cuando no hay datos del usuario */
   const defaultIncome = [
     { type: "Net Salary", amount: 0 },
     { type: "Total", amount: 0 },
   ];
 
+  /** Gastos iniciales cuando no hay datos del usuario */
   const defaultExpenses = [
     { type: "Dwelling", amount: 140000 },
     { type: "Telephone Bill", amount: 44000 },
@@ -83,6 +108,8 @@ const Expenses = () => {
     { type: "Education", amount: 27000 },
     { type: "Total", amount: 240000 },
   ];
+
+  /* -------------------- Estado del componente -------------------- */
 
   const [income, setIncome] = useState(defaultIncome);
   const [expenses, setExpenses] = useState(defaultExpenses);
@@ -93,11 +120,23 @@ const Expenses = () => {
     vto: "",
     ot: "",
     isSalaried: null,
-    cutDays: [1, 16], // default
+    cutDays: [1, 16], // Días de corte por defecto
   });
 
+  /* -------------------- Referencias -------------------- */
+
+  /** Indica si ya se realizó la carga inicial de datos del usuario */
   const initialLoadDone = useRef(false);
+
+  /** Almacena la clave del último período guardado para evitar guardados duplicados */
   const lastSavedPeriodStart = useRef(null);
+
+  /* -------------------- Efectos -------------------- */
+
+  /**
+   * Efecto de carga inicial: sincroniza el estado local con los datos
+   * del usuario autenticado. Solo se ejecuta una vez.
+   */
   useEffect(() => {
     if (!isAuthenticated || !user) return;
     if (initialLoadDone.current) return;
@@ -112,12 +151,14 @@ const Expenses = () => {
         ? user.expenses
         : defaultExpenses,
     );
+
     if (user.payInfo?.paymentDates?.length === 2) {
       setDateRange([
         new Date(user.payInfo.paymentDates[0]),
         new Date(user.payInfo.paymentDates[1]),
       ]);
     }
+
     if (user.payInfo) {
       setSalaryData({
         grossSalary: user.payInfo.grossSalary || "",
@@ -130,6 +171,10 @@ const Expenses = () => {
     }
   }, [isAuthenticated, user]);
 
+  /**
+   * Efecto de auto-guardado al cambiar los días de corte (cutDays).
+   * Envía los datos actualizados a la API automáticamente.
+   */
   useEffect(() => {
     if (!initialLoadDone.current) return;
     if (!isAuthenticated || !dateRange[0] || !dateRange[1]) return;
@@ -160,20 +205,28 @@ const Expenses = () => {
     autoSave();
   }, [salaryData.cutDays[0], salaryData.cutDays[1]]);
 
+  /**
+   * Efecto de auto-guardado al cambiar el rango de fechas (período de pago).
+   * Resetea VTO y OT a 0 cuando se detecta un nuevo período.
+   */
   useEffect(() => {
     if (!initialLoadDone.current) return;
     if (!isAuthenticated || !dateRange[0] || !dateRange[1]) return;
 
     const currentKey = `${dateRange[0].getFullYear()}-${dateRange[0].getMonth()}-${dateRange[0].getDate()}`;
 
+    // Primera vez: solo almacena la clave sin guardar
     if (lastSavedPeriodStart.current === null) {
       lastSavedPeriodStart.current = currentKey;
       return;
     }
 
+    // Si el período no cambió, no hacer nada
     if (currentKey === lastSavedPeriodStart.current) return;
 
     lastSavedPeriodStart.current = currentKey;
+
+    // Resetear horas extras y VTO al cambiar de período
     setSalaryData((prev) => ({ ...prev, vto: 0, ot: 0 }));
 
     const autoSave = async () => {
@@ -198,9 +251,16 @@ const Expenses = () => {
         console.error("Error al auto-guardar periodo:", err);
       }
     };
+
     autoSave();
   }, [dateRange]);
 
+  /* -------------------- Handlers -------------------- */
+
+  /**
+   * Guarda manualmente todos los cambios en la base de datos.
+   * Valida que exista un período de pago si el usuario es asalariado.
+   */
   const saveChanges = async () => {
     try {
       if (salaryData.isSalaried) {
@@ -233,11 +293,17 @@ const Expenses = () => {
     }
   };
 
+  /* -------------------- Estado para nuevos registros -------------------- */
+
   const [newIncome, setNewIncome] = useState();
   const [incomeType, setIncomeType] = useState(incomeOptions[0]);
   const [newExpense, setNewExpense] = useState();
   const [expenseType, setExpenseType] = useState(expenseOptions[0]);
 
+  /**
+   * Agrega un nuevo ingreso a la lista, validando que se haya
+   * ingresado un monto y seleccionado un tipo. Recalcula el total.
+   */
   const addIncome = () => {
     if (!newIncome) {
       alert("Please input an income");
@@ -260,10 +326,15 @@ const Expenses = () => {
       type: "Total",
       amount: oldTotal.amount + newIncomeObject.amount,
     };
+
     setIncome([...updatedIncomes, newTotal]);
     setNewIncome("");
   };
 
+  /**
+   * Agrega un nuevo gasto a la lista, validando que se haya
+   * ingresado un monto y seleccionado un tipo. Recalcula el total.
+   */
   const addExpense = () => {
     if (!newExpense) {
       alert("Please input an expense");
@@ -286,14 +357,22 @@ const Expenses = () => {
       type: "Total",
       amount: oldTotal.amount + newExpenseObject.amount,
     };
+
     setExpenses([...updatedExpenses, newTotal]);
     setNewExpense("");
   };
 
+  /**
+   * Elimina un elemento (ingreso o gasto) de la lista correspondiente
+   * y recalcula el total automáticamente.
+   * @param {Array} typeFromDelete - Lista de origen (income o expenses)
+   * @param {Object} target - Elemento a eliminar
+   */
   const handleDelete = (typeFromDelete, target) => {
     const updatedType = typeFromDelete.filter((type) => {
       return type !== target;
     });
+
     const currentType = updatedType.slice(0, -1);
     const newTotalAmount = currentType.reduce((sum, item) => {
       return sum + Number(item.amount);
@@ -311,8 +390,11 @@ const Expenses = () => {
     }
   };
 
+  /* -------------------- Render -------------------- */
+
   return (
     <Container>
+      {/* Sección de entrada para nuevos ingresos */}
       <IncAndExpContainer>
         <select
           value={incomeType}
@@ -337,6 +419,8 @@ const Expenses = () => {
           onKeyDown={(e) => e.key === "Enter" && addIncome(newIncome)}
         />
       </IncAndExpContainer>
+
+      {/* Sección de entrada para nuevos gastos */}
       <IncAndExpContainer>
         <select
           value={expenseType}
@@ -362,6 +446,7 @@ const Expenses = () => {
         />
       </IncAndExpContainer>
 
+      {/* Componente de flujo de ingresos y configuración salarial */}
       <IncomeFlow
         income={income}
         setIncome={setIncome}
@@ -371,8 +456,10 @@ const Expenses = () => {
         setSalaryData={setSalaryData}
       />
 
+      {/* Tablas de ingresos y gastos con opción de eliminación */}
       <Tables income={income} expenses={expenses} handleDelete={handleDelete} />
 
+      {/* Botón para guardar cambios manualmente */}
       <SaveButton onClick={saveChanges}>Save changes on Database</SaveButton>
     </Container>
   );

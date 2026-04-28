@@ -1,6 +1,18 @@
-import React from "react"
-import styled from "styled-components"
+/**
+ * Tables.jsx
+ * Componente que muestra tres tablas financieras: Ingresos (Incomes),
+ * Gastos (Expenses) y un Resumen Financiero (Financial Overview).
+ * Permite eliminar elementos individuales mediante un ícono de papelera.
+ */
 
+import { Fragment } from "react";
+import styled from "styled-components";
+
+/* ========================
+   Styled Components
+   ======================== */
+
+/** Contenedor principal que distribuye las tablas en fila (o columna en móvil) */
 const TablesContainer = styled.div`
   width: 100%;
   display: flex;
@@ -12,16 +24,18 @@ const TablesContainer = styled.div`
     flex-direction: column;
     align-items: center;
   }
-`
+`;
 
+/** Contenedor individual para cada tabla */
 const TableContainer = styled.div`
   width: 45%;
 
   @media (max-width: 768px) {
     width: 95%;
   }
-`
+`;
 
+/** Tabla estilizada con sombra y bordes redondeados */
 const StyledTable = styled.table`
   width: 100%;
   margin: 30px 0px;
@@ -29,14 +43,16 @@ const StyledTable = styled.table`
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   overflow: hidden;
-`
+`;
 
+/** Encabezado de tabla con fondo oscuro y texto blanco */
 const TableHeader = styled.thead`
   background-color: #333;
   color: white;
   font-size: 1.5em;
-`
+`;
 
+/** Fila de tabla con estilos alternados y efecto hover */
 const TableRow = styled.tr`
   &:nth-child(even) {
     background-color: #383838;
@@ -44,15 +60,17 @@ const TableRow = styled.tr`
   &:hover {
     background-color: #4c4c4c;
   }
-`
+`;
 
+/** Celda de tabla con padding, bordes y texto claro */
 const TableCell = styled.td`
   padding: 12px 15px;
   border: 1px solid #444;
   text-align: left;
   color: #f0f0f0;
-`
+`;
 
+/** Ícono de papelera para eliminar un registro, con efecto de escala al hover */
 const Bin = styled.img`
   height: 30px;
   width: auto;
@@ -64,12 +82,19 @@ const Bin = styled.img`
   &:hover {
     transform: scale(1.15);
   }
-`
+`;
 
+/**
+ * Componente Tables
+ * @param {Array} income - Lista de objetos de ingresos (incluye tipo, monto y posible desglose).
+ * @param {Array} expenses - Lista de objetos de gastos.
+ * @param {Function} handleDelete - Callback para eliminar un registro de ingreso o gasto.
+ */
 const Tables = ({ income, expenses, handleDelete }) => {
   return (
     <>
       <TablesContainer>
+        {/* ====== Tabla de Ingresos ====== */}
         <TableContainer>
           <h1 style={{ textAlign: "center" }}>Incomes</h1>
           <StyledTable>
@@ -81,9 +106,10 @@ const Tables = ({ income, expenses, handleDelete }) => {
             </TableHeader>
             <tbody>
               {income.map((target) => {
+                /* Caso especial: Net Salary con desglose de partidas */
                 if (target.type === "Net Salary" && target.breakDown) {
                   return (
-                    <React.Fragment key={target.type}>
+                    <Fragment key={target.type}>
                       <TableRow>
                         <TableCell><strong>Net Salary</strong></TableCell>
                         <TableCell style={{ textAlign: 'right' }}>
@@ -91,25 +117,28 @@ const Tables = ({ income, expenses, handleDelete }) => {
                         </TableCell>
                       </TableRow>
 
+                      {/* Sub-filas del desglose salarial */}
                       {target.breakDown && target.breakDown.map((item, idx) => (
                         <TableRow key={idx}>
                           <TableCell style={{ paddingLeft: '30px', color: '#b0bec5' }}>{item.label}</TableCell>
                           <TableCell style={{ textAlign: 'right', color: '#b0bec5' }}>{"₡" + parseFloat(item.amount).toFixed(2)}</TableCell>
                         </TableRow>
                       ))}
-                    </React.Fragment>
-                  )
+                    </Fragment>
+                  );
                 }
 
+                /* Fila de total de ingresos (sin botón de eliminar) */
                 if (target.type === "Total") {
                   return (
                     <TableRow key={target.type}>
                       <TableCell><strong>{target.type}</strong></TableCell>
                       <TableCell style={{ textAlign: 'right' }}><strong>{"₡" + target.amount}</strong></TableCell>
                     </TableRow>
-                  )
+                  );
                 }
 
+                /* Fila genérica de ingreso con opción de eliminar */
                 return (
                   <TableRow key={target.type}>
                     <TableCell>{target.type}</TableCell>
@@ -124,14 +153,16 @@ const Tables = ({ income, expenses, handleDelete }) => {
                         src={`/productos/garbage.png`}
                         alt="Garbage Icon"
                         onClick={() => handleDelete(expenses, target)}
-                      /></TableCell>
+                      />
+                    </TableCell>
                   </TableRow>
-                )
+                );
               })}
             </tbody>
           </StyledTable>
         </TableContainer>
 
+        {/* ====== Tabla de Gastos ====== */}
         <TableContainer>
           <h1 style={{ textAlign: "center" }}>Expenses</h1>
           <StyledTable>
@@ -152,13 +183,15 @@ const Tables = ({ income, expenses, handleDelete }) => {
                       justifyContent: "space-between",
                       alignItems: "center"
                     }}>{"₡" + target.amount}
+                    {/* Mostrar papelera solo si no es Total ni Salary */}
                     {(target.type !== "Total" && target.type !== "Salary") && (
                       <Bin
                         src={`/productos/garbage.png`}
                         alt="Garbage Icon"
                         onClick={() => handleDelete(expenses, target)}
                       />
-                    )}</TableCell>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
             </tbody>
@@ -166,6 +199,7 @@ const Tables = ({ income, expenses, handleDelete }) => {
         </TableContainer>
       </TablesContainer>
 
+      {/* ====== Tabla de Resumen Financiero ====== */}
       <TableContainer>
         <h1 style={{ textAlign: "center" }}>Financial Overview</h1>
         <StyledTable>
@@ -192,7 +226,7 @@ const Tables = ({ income, expenses, handleDelete }) => {
         </StyledTable>
       </TableContainer>
     </>
-  )
-}
+  );
+};
 
-export default Tables
+export default Tables;
