@@ -1,7 +1,7 @@
-import { useState, useContext } from 'react'
-import { AuthContext } from '../../context/AuthContext'
-import { useNavigate, useLocation } from 'react-router-dom'
-import styled from 'styled-components'
+import { useState, useContext } from "react";
+import { AuthContext } from "../../context/AuthContext";
+import { useNavigate, useLocation } from "react-router-dom";
+import styled from "styled-components";
 
 const Container = styled.div`
   min-height: 100vh;
@@ -11,7 +11,7 @@ const Container = styled.div`
   justify-content: center;
   padding: 1rem;
   width: 100%;
-`
+`;
 
 const Card = styled.div`
   background-color: #1f2937;
@@ -20,7 +20,7 @@ const Card = styled.div`
   box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
   width: 100%;
   max-width: 28rem;
-`
+`;
 
 const Title = styled.h2`
   font-size: 1.875rem;
@@ -28,9 +28,9 @@ const Title = styled.h2`
   text-align: center;
   margin-bottom: 1.5rem;
   color: #fff;
-`
+`;
 
-const Form = styled.form``
+const Form = styled.form``;
 
 const Input = styled.input`
   box-sizing: border-box;
@@ -42,14 +42,16 @@ const Input = styled.input`
   border: 1px solid #4b5563;
   color: #fff;
   outline: none;
-  &:focus { box-shadow: 0 0 0 2px #3b82f6; }
-`
+  &:focus {
+    box-shadow: 0 0 0 2px #3b82f6;
+  }
+`;
 
 const ErrorText = styled.p`
   color: #f87171;
   text-align: center;
   margin-bottom: 1rem;
-`
+`;
 
 const Button = styled.button`
   box-sizing: border-box;
@@ -62,15 +64,20 @@ const Button = styled.button`
   transition: 0.3s;
   cursor: pointer;
   border: none;
-  &:hover { background-color: #1d4ed8; }
-  &:disabled { background-color: #6b7280; cursor: not-allowed; }
-`
+  &:hover {
+    background-color: #1d4ed8;
+  }
+  &:disabled {
+    background-color: #6b7280;
+    cursor: not-allowed;
+  }
+`;
 
 const FooterText = styled.p`
   text-align: center;
   color: #9ca3af;
   margin-top: 1.5rem;
-`
+`;
 
 const FooterLink = styled.a`
   color: #60a5fa;
@@ -78,54 +85,55 @@ const FooterLink = styled.a`
   &:hover {
     text-decoration: underline;
   }
-`
+`;
 
 const Login = ({ toastVisibility, setMessage }) => {
-  const [formData, setFormData] = useState({ email: '', password: '' })
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const { updateUser } = useContext(AuthContext)
-  const navigate = useNavigate()
-  const location = useLocation()
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { updateUser } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
-      const response = await fetch('/api/users/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/users/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
-        credentials: 'include'
-      })
+        credentials: "include",
+      });
 
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message || 'Failed to login')
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Failed to login");
 
       // Guardar access token
-      localStorage.setItem('accessToken', data.data.accessToken)
+      localStorage.setItem("accessToken", data.data.accessToken);
 
       // Actualizar contexto (esto también guarda en localStorage)
-      updateUser(data.data)
+      updateUser(data.data);
 
-      setMessage(`Welcome back! ${data.data.username}`)
-      toastVisibility(true)
+      setMessage(`Welcome back! ${data.data.username}`);
+      toastVisibility(true);
 
       // Redirigir al home
-      const from = location.state?.from === '/login' ? '/' : (location.state?.from || '/')
-      navigate(from)
+      const from =
+        location.state?.from === "/login" ? "/" : location.state?.from || "/";
+      navigate(from);
     } catch (err) {
-      setError(err.message)
+      setError(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Container>
@@ -150,16 +158,16 @@ const Login = ({ toastVisibility, setMessage }) => {
           />
           {error && <ErrorText>{error}</ErrorText>}
           <Button type="submit" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? "Logging in..." : "Login"}
           </Button>
         </Form>
         <FooterText>
-          Don&apos;t have an account?{' '}
+          Don&apos;t have an account?{" "}
           <FooterLink href="/register">Register here</FooterLink>
         </FooterText>
       </Card>
     </Container>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;
