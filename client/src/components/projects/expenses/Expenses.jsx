@@ -62,38 +62,6 @@ const Expenses = () => {
   // Contexto de autenticación para acceder a datos del usuario
   const { user, isAuthenticated, updateUser } = useContext(AuthContext);
 
-  /* -------------------- Opciones de selección -------------------- */
-
-  /** Tipos de ingreso disponibles en el dropdown */
-  const incomeOptions = [
-    "Choose one type of income",
-    "Dividend",
-    "Sells",
-    "Services",
-    "Extra",
-    "Other",
-  ];
-
-  /** Tipos de gasto disponibles en el dropdown */
-  const expenseOptions = [
-    "Choose one type of expense",
-    "Dwelling",
-    "Telephone Bill",
-    "Internet Bill",
-    "Water Bill",
-    "Electrical Bill",
-    "Feeding",
-    "Transportation",
-    "Health",
-    "Education",
-    "Debts",
-    "Owed to people",
-    "Leisure",
-    "Clothing",
-  ];
-
-  /* -------------------- Valores por defecto -------------------- */
-
   /** Ingresos iniciales cuando no hay datos del usuario */
   const defaultIncome = [
     { type: "Net Salary", amount: 0 },
@@ -279,9 +247,9 @@ const Expenses = () => {
   /* -------------------- Estado para nuevos registros -------------------- */
 
   const [newIncome, setNewIncome] = useState();
-  const [incomeType, setIncomeType] = useState(incomeOptions[0]);
+  const [incomeType, setIncomeType] = useState("");
   const [newExpense, setNewExpense] = useState();
-  const [expenseType, setExpenseType] = useState(expenseOptions[0]);
+  const [expenseType, setExpenseType] = useState("");
 
   /**
    * Agrega un nuevo ingreso a la lista, validando que se haya
@@ -290,10 +258,6 @@ const Expenses = () => {
   const addIncome = () => {
     if (!newIncome) {
       alert("Please input an income");
-      return;
-    }
-    if (incomeType === incomeOptions[0]) {
-      alert("Please select a type of income");
       return;
     }
 
@@ -312,6 +276,7 @@ const Expenses = () => {
 
     setIncome([...updatedIncomes, newTotal]);
     setNewIncome("");
+    setIncomeType("");
   };
 
   /**
@@ -321,10 +286,6 @@ const Expenses = () => {
   const addExpense = () => {
     if (!newExpense) {
       alert("Please input an expense");
-      return;
-    }
-    if (expenseType === expenseOptions[0]) {
-      alert("Please select a type of expense");
       return;
     }
 
@@ -343,6 +304,7 @@ const Expenses = () => {
 
     setExpenses([...updatedExpenses, newTotal]);
     setNewExpense("");
+    setExpenseType("");
   };
 
   /**
@@ -379,8 +341,9 @@ const Expenses = () => {
     <Container>
       {/* Sección de entrada para nuevos ingresos */}
       <IncAndExpContainer>
-        <select
+        <input
           value={incomeType}
+          placeholder="Type of income"
           style={{
             height: "35px",
             width: "150px",
@@ -389,10 +352,7 @@ const Expenses = () => {
           }}
           onChange={(e) => setIncomeType(e.target.value)}
         >
-          {incomeOptions.map((income) => (
-            <option key={income}>{income}</option>
-          ))}
-        </select>
+        </input>
         <input
           type="number"
           placeholder="Income amount"
@@ -405,8 +365,9 @@ const Expenses = () => {
 
       {/* Sección de entrada para nuevos gastos */}
       <IncAndExpContainer>
-        <select
+        <input
           value={expenseType}
+          placeholder="Type of expense"
           style={{
             height: "35px",
             width: "150px",
@@ -415,10 +376,7 @@ const Expenses = () => {
           }}
           onChange={(e) => setExpenseType(e.target.value)}
         >
-          {expenseOptions.map((expense) => (
-            <option key={expense}>{expense}</option>
-          ))}
-        </select>
+        </input>
         <input
           type="number"
           placeholder="Expense amount"
