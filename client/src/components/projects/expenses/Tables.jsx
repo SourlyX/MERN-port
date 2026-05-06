@@ -152,7 +152,7 @@ const Tables = ({ income, expenses, handleDelete }) => {
                       <Bin
                         src={`/productos/garbage.png`}
                         alt="Garbage Icon"
-                        onClick={() => handleDelete(expenses, target)}
+                        onClick={() => handleDelete(income, target)}
                       />
                     </TableCell>
                   </TableRow>
