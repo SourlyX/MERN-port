@@ -57,6 +57,14 @@ const SaveButton = styled.button`
   }
 `;
 
+/** Input estilizado para los campos de tipo y monto */
+const Input = styled.input`
+  height: 35px;
+  border-radius: 10px;
+  max-width: 90%;
+  border: 1px solid #4fffff;
+`;
+
 /* ======================== Componente Principal ======================== */
 
 const Expenses = () => {
@@ -261,6 +269,10 @@ const Expenses = () => {
       alert("Please input an income");
       return;
     }
+    if (!incomeType) {
+      alert("Please input an income type");
+      return;
+    }
 
     const newIncomeObject = {
       type: incomeType,
@@ -287,6 +299,10 @@ const Expenses = () => {
   const addExpense = () => {
     if (!newExpense) {
       alert("Please input an expense");
+      return;
+    }
+    if (!expenseType) {
+      alert("Please input an expense type");
       return;
     }
 
@@ -342,31 +358,39 @@ const Expenses = () => {
     <Container>
       {/* Sección de entrada para nuevos ingresos */}
       <IncAndExpContainer>
-        <input
+        <Input
           value={incomeType}
           placeholder="Type of income"
-          style={{
-            height: "35px",
-            width: "150px",
-            borderRadius: "10px",
-            maxWidth: "90%",
-          }}
           onChange={(e) => setIncomeType(e.target.value)}
-        >
-        </input>
-        <input
+        ></Input>
+        <Input
           type="number"
           placeholder="Income amount"
           style={{ height: "35px", borderRadius: "10px", maxWidth: "90%" }}
           value={newIncome}
           onChange={(e) => setNewIncome(e.target.value)}
+          s
           onKeyDown={(e) => e.key === "Enter" && addIncome(newIncome)}
         />
+        <button
+          style={{
+            height: "35px",
+            borderRadius: "10px",
+            padding: "0 15px",
+            backgroundColor: "#55F5ED",
+            color: "#282C34",
+            border: "none",
+            cursor: "pointer",
+          }}
+          onClick={addIncome}
+        >
+          Add
+        </button>
       </IncAndExpContainer>
 
       {/* Sección de entrada para nuevos gastos */}
       <IncAndExpContainer>
-        <input
+        <Input
           value={expenseType}
           placeholder="Type of expense"
           style={{
@@ -374,18 +398,37 @@ const Expenses = () => {
             width: "150px",
             borderRadius: "10px",
             maxWidth: "90%",
+            border: "1px solid #4fffff",
           }}
           onChange={(e) => setExpenseType(e.target.value)}
-        >
-        </input>
-        <input
+        ></Input>
+        <Input
           type="number"
           placeholder="Expense amount"
-          style={{ height: "35px", borderRadius: "10px", maxWidth: "90%" }}
+          style={{
+            height: "35px",
+            borderRadius: "10px",
+            maxWidth: "90%",
+            border: "1px solid #4fffff",
+          }}
           value={newExpense}
           onChange={(e) => setNewExpense(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && addExpense(newExpense)}
         />
+        <button
+          style={{
+            height: "35px",
+            borderRadius: "10px",
+            padding: "0 15px",
+            backgroundColor: "#55F5ED",
+            color: "#282C34",
+            border: "none",
+            cursor: "pointer",
+          }}
+          onClick={addExpense}
+        >
+          Add
+        </button>
       </IncAndExpContainer>
 
       {/* Componente de flujo de ingresos y configuración salarial */}
