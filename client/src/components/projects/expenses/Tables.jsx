@@ -89,8 +89,10 @@ const Bin = styled.img`
  * @param {Array} income - Lista de objetos de ingresos (incluye tipo, monto y posible desglose).
  * @param {Array} expenses - Lista de objetos de gastos.
  * @param {Function} handleDelete - Callback para eliminar un registro de ingreso o gasto.
+ * @param {number} moneyInHand - Dinero disponible en mano.
+ * @param {Function} setMoneyInHand - Función para actualizar el dinero disponible en mano.
  */
-const Tables = ({ income, expenses, handleDelete }) => {
+const Tables = ({ income, expenses, handleDelete, moneyInHand, setMoneyInHand }) => {
   return (
     <>
       <TablesContainer>
@@ -221,6 +223,29 @@ const Tables = ({ income, expenses, handleDelete }) => {
             <TableRow>
               <TableCell>Total</TableCell>
               <TableCell>{"₡" + (income.at(-1).amount - expenses.at(-1).amount).toString()}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Money in Hand</TableCell>
+              <TableCell>
+                <input
+                  type="number"
+                  value={moneyInHand}
+                  onChange={(e) => setMoneyInHand(Number(e.target.value))}
+                />
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell style={{ color: "white", background: "#4CAF50" }}>
+                Real Balance
+              </TableCell>
+              <TableCell style={{ color: "white", background: "#4CAF50" }}>
+                {"₡" +
+                  (
+                    income.at(-1).amount -
+                    expenses.at(-1).amount +
+                    moneyInHand
+                  ).toString()}
+              </TableCell>
             </TableRow>
           </tbody>
         </StyledTable>

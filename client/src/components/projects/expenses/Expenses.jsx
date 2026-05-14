@@ -98,6 +98,7 @@ const Expenses = () => {
     ot: "",
     isSalaried: null,
     cutDays: [1, 16],
+    moneyInHand: 0,
     workdayHours: 8, // Horas trabajadas en un día laboral (valor por defecto)
   });
 
@@ -163,6 +164,7 @@ const Expenses = () => {
         ot: user.payInfo.ot || "",
         isSalaried: !!user.payInfo.isSalaried,
         cutDays: user.payInfo.cutDays || [1, 16],
+        moneyInHand: user.payInfo.moneyInHand || 0,
         workdayHours: user.payInfo.workdayHours || 8,
       });
     }
@@ -325,6 +327,14 @@ const Expenses = () => {
   };
 
   /**
+   * Actualiza el dinero disponible en mano/banco dentro de salaryData
+   * sin pisar el resto de los campos del estado.
+   * @param {number} value - Nuevo monto de dinero en mano
+   */
+  const setMoneyInHand = (value) =>
+    setSalaryData((prev) => ({ ...prev, moneyInHand: value }));
+
+  /**
    * Elimina un elemento (ingreso o gasto) de la lista correspondiente
    * y recalcula el total automáticamente.
    * @param {Array} typeFromDelete - Lista de origen (income o expenses)
@@ -442,7 +452,7 @@ const Expenses = () => {
       />
 
       {/* Tablas de ingresos y gastos con opción de eliminación */}
-      <Tables income={income} expenses={expenses} handleDelete={handleDelete} />
+      <Tables income={income} expenses={expenses} handleDelete={handleDelete} moneyInHand={salaryData.moneyInHand} setMoneyInHand={setMoneyInHand} />
 
       {/* Botón para guardar cambios manualmente */}
       <SaveButton onClick={saveChanges}>Save changes on Database</SaveButton>
