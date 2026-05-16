@@ -98,6 +98,7 @@ const Expenses = () => {
     ot: "",
     isSalaried: null,
     cutDays: [1, 16],
+    payDays: [15, 30],
     moneyInHand: 0,
     workdayHours: 8, // Horas trabajadas en un día laboral (valor por defecto)
   });
@@ -164,6 +165,7 @@ const Expenses = () => {
         ot: user.payInfo.ot || "",
         isSalaried: !!user.payInfo.isSalaried,
         cutDays: user.payInfo.cutDays || [1, 16],
+        payDays: user.payInfo.payDays || [15, 30],
         moneyInHand: user.payInfo.moneyInHand || 0,
         workdayHours: user.payInfo.workdayHours || 8,
       });

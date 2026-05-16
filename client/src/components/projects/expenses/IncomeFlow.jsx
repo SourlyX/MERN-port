@@ -233,12 +233,38 @@ const IncomeFlow = ({ income, setIncome, dateRange, setDateRange, salaryData, se
             <input
               type="number"
               min={1}
-              max={28}
+              max={30}
               value={salaryData.cutDays[1]}
               style={{ width: "50px", height: "35px", borderRadius: "10px", textAlign: "center" }}
               onChange={(e) => {
                 const val = parseInt(e.target.value) || 16;
                 setSalaryData(prev => ({ ...prev, cutDays: [prev.cutDays[0], val] }));
+              }}
+            />
+          </div>
+          <div style={{ color:"#FFD700"}}>
+            <label>Pay Days: </label>
+            <input
+              type="number"
+              min={1}
+              max={31}
+              value={salaryData.payDays[0]}
+              style={{ width: "50px", height: "35px", borderRadius: "10px", textAlign: "center" }}
+              onChange={(e) => {
+                const val = parseInt(e.target.value) || 15;
+                setSalaryData(prev => ({ ...prev, payDays: [val, prev.payDays[1]] }));
+              }}
+            />
+            <span> and </span>
+            <input
+              type="number"
+              min={2}
+              max={31}
+              value={salaryData.payDays[1]}
+              style={{ width: "50px", height: "35px", borderRadius: "10px", textAlign: "center" }}
+              onChange={(e) => {
+                const val = parseInt(e.target.value) || 30;
+                setSalaryData(prev => ({ ...prev, payDays: [prev.payDays[0], val] }));
               }}
             />
           </div>
