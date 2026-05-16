@@ -67,7 +67,7 @@ const Input = styled.input`
 
 /* ======================== Componente Principal ======================== */
 
-const Expenses = () => {
+const PersonalFinance = () => {
   // Contexto de autenticación para acceder a datos del usuario
   const { user, isAuthenticated, updateUser } = useContext(AuthContext);
 
@@ -462,4 +462,4 @@ const Expenses = () => {
   );
 };
 
-export default Expenses;
+export default PersonalFinance;

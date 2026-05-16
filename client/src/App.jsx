@@ -12,7 +12,7 @@ import ScrollToTop from "./components/ScrollToTop"
 import ToDoList from "./components/projects/ToDoList"
 import Restarurante from "./components/routes/restaurant/Restaurante"
 import Pokedex from "./components/projects/pokeapi/Pokedex"
-import Expenses from "./components/projects/expenses/Expenses"
+import PersonalFinance from "./components/projects/expenses/PersonalFinance"
 import Login from "./components/routes/Login"
 import Register from "./components/routes/Register"
 import data from "./data.json"
@@ -96,7 +96,7 @@ function App() {
           <Route path="/projects/pokedex" element={<Pokedex />} />
           <Route
             path="/projects/incomes&expenses"
-            element={<Expenses />}
+            element={<PersonalFinance />}
           />
 
           <Route path="/login" element={<RedirectIfAuth>
