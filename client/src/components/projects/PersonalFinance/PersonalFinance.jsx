@@ -364,6 +364,39 @@ const PersonalFinance = () => {
     }
   };
 
+  /**
+   * Edita un elemento (ingreso o gasto) de la lista correspondiente
+   * y recalcula el total automáticamente.
+   * @param {Array} typeFromEdit - Lista de origen (income o expenses)
+   * @param {Object} target - Elemento a editar
+   * @param {string} newType - Nuevo nombre/tipo del elemento
+   * @param {number} newAmount - Nuevo monto del elemento
+   */
+  const handleEdit = (typeArray, target, newType, newAmount) => {
+    const updatedType = typeArray.map((type) => {
+      if (type === target) {
+        return { ...target, type: newType, amount: parseFloat(newAmount) };
+      }
+      return type;
+    });
+
+    const currentType = updatedType.slice(0, -1);
+    const newTotalAmount = currentType.reduce((sum, item) => {
+      return sum + Number(item.amount);
+    }, 0);
+
+    const newTotalObject = {
+      type: "Total",
+      amount: newTotalAmount,
+    };
+
+    if (typeArray === income) {
+      setIncome([...currentType, newTotalObject]);
+    } else if (typeArray === expenses) {
+      setExpenses([...currentType, newTotalObject]);
+    }
+  };
+
   /* -------------------- Render -------------------- */
 
   return (
@@ -454,7 +487,14 @@ const PersonalFinance = () => {
       />
 
       {/* Tablas de ingresos y gastos con opción de eliminación */}
-      <Tables income={income} expenses={expenses} handleDelete={handleDelete} moneyInHand={salaryData.moneyInHand} setMoneyInHand={setMoneyInHand} />
+      <Tables
+        income={income}
+        expenses={expenses}
+        handleDelete={handleDelete}
+        moneyInHand={salaryData.moneyInHand}
+        setMoneyInHand={setMoneyInHand}
+        handleEdit={handleEdit}
+      />
 
       {/* Botón para guardar cambios manualmente */}
       <SaveButton onClick={saveChanges}>Save changes on Database</SaveButton>

@@ -91,8 +91,9 @@ const Bin = styled.img`
  * @param {Function} handleDelete - Callback para eliminar un registro de ingreso o gasto.
  * @param {number} moneyInHand - Dinero disponible en mano.
  * @param {Function} setMoneyInHand - Función para actualizar el dinero disponible en mano.
+ * @param {Function} handleEdit - Callback para editar un registro de ingreso o gasto.
  */
-const Tables = ({ income, expenses, handleDelete, moneyInHand, setMoneyInHand }) => {
+const Tables = ({ income, expenses, handleDelete, moneyInHand, setMoneyInHand, handleEdit }) => {
   return (
     <>
       <TablesContainer>
