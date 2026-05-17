@@ -374,7 +374,7 @@ const PersonalFinance = () => {
    */
   const handleEdit = (typeArray, target, newType, newAmount) => {
     const updatedType = typeArray.map((type) => {
-      if (type === target) {
+      if (type.type === target) {
         return { ...target, type: newType, amount: parseFloat(newAmount) };
       }
       return type;
@@ -414,7 +414,6 @@ const PersonalFinance = () => {
           style={{ height: "35px", borderRadius: "10px", maxWidth: "90%" }}
           value={newIncome}
           onChange={(e) => setNewIncome(e.target.value)}
-          s
           onKeyDown={(e) => e.key === "Enter" && addIncome(newIncome)}
         />
         <button

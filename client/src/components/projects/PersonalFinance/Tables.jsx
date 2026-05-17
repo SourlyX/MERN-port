@@ -5,7 +5,7 @@
  * Permite eliminar elementos individuales mediante un ícono de papelera.
  */
 
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import styled from "styled-components";
 
 /* ========================
@@ -84,6 +84,23 @@ const Bin = styled.img`
   }
 `;
 
+const Pencil = styled.button`
+  height: 30px;
+  width: auto;
+  cursor: pointer;
+  align-self: right;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  padding: 0;
+  transform: scale(1);
+  transition: transform 150ms ease-in;
+
+  &:hover {
+    transform: scale(1.15);
+  }
+`;
+
 /**
  * Componente Tables
  * @param {Array} income - Lista de objetos de ingresos (incluye tipo, monto y posible desglose).
@@ -93,7 +110,21 @@ const Bin = styled.img`
  * @param {Function} setMoneyInHand - Función para actualizar el dinero disponible en mano.
  * @param {Function} handleEdit - Callback para editar un registro de ingreso o gasto.
  */
-const Tables = ({ income, expenses, handleDelete, moneyInHand, setMoneyInHand, handleEdit }) => {
+const Tables = ({
+  income,
+  expenses,
+  handleDelete,
+  moneyInHand,
+  setMoneyInHand,
+  handleEdit,
+}) => {
+  const handleConfirm = (table) => {
+    handleEdit(table, editingRow, editValues.type, editValues.amount);
+    setEditingRow(null);
+  };
+  const [editingRow, setEditingRow] = useState(null); // Estado para controlar qué fila se está editando
+  const [editValues, setEditValues] = useState({ type: "", amount: "" }); // Estado para los valores editados
+
   return (
     <>
       <TablesContainer>
@@ -114,19 +145,32 @@ const Tables = ({ income, expenses, handleDelete, moneyInHand, setMoneyInHand, h
                   return (
                     <Fragment key={target.type}>
                       <TableRow>
-                        <TableCell><strong>Net Salary</strong></TableCell>
-                        <TableCell style={{ textAlign: 'right' }}>
-                          <strong>{"₡" + parseFloat(target.amount).toFixed(2)}</strong>
+                        <TableCell>
+                          <strong>Net Salary</strong>
+                        </TableCell>
+                        <TableCell style={{ textAlign: "right" }}>
+                          <strong>
+                            {"₡" + parseFloat(target.amount).toFixed(2)}
+                          </strong>
                         </TableCell>
                       </TableRow>
 
                       {/* Sub-filas del desglose salarial */}
-                      {target.breakDown && target.breakDown.map((item, idx) => (
-                        <TableRow key={idx}>
-                          <TableCell style={{ paddingLeft: '30px', color: '#b0bec5' }}>{item.label}</TableCell>
-                          <TableCell style={{ textAlign: 'right', color: '#b0bec5' }}>{"₡" + parseFloat(item.amount).toFixed(2)}</TableCell>
-                        </TableRow>
-                      ))}
+                      {target.breakDown &&
+                        target.breakDown.map((item, idx) => (
+                          <TableRow key={idx}>
+                            <TableCell
+                              style={{ paddingLeft: "30px", color: "#b0bec5" }}
+                            >
+                              {item.label}
+                            </TableCell>
+                            <TableCell
+                              style={{ textAlign: "right", color: "#b0bec5" }}
+                            >
+                              {"₡" + parseFloat(item.amount).toFixed(2)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
                     </Fragment>
                   );
                 }
@@ -135,31 +179,99 @@ const Tables = ({ income, expenses, handleDelete, moneyInHand, setMoneyInHand, h
                 if (target.type === "Total") {
                   return (
                     <TableRow key={target.type}>
-                      <TableCell><strong>{target.type}</strong></TableCell>
-                      <TableCell style={{ textAlign: 'right' }}><strong>{"₡" + target.amount}</strong></TableCell>
+                      <TableCell>
+                        <strong>{target.type}</strong>
+                      </TableCell>
+                      <TableCell style={{ textAlign: "right" }}>
+                        <strong>{"₡" + target.amount}</strong>
+                      </TableCell>
                     </TableRow>
                   );
                 }
 
                 /* Fila genérica de ingreso con opción de eliminar */
-                return (
-                  <TableRow key={target.type}>
-                    <TableCell>{target.type}</TableCell>
-                    <TableCell
-                      style={{
-                        display: "flex",
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        alignItems: "center"
-                      }}>{"₡" + target.amount}
-                      <Bin
-                        src={`/productos/garbage.png`}
-                        alt="Garbage Icon"
-                        onClick={() => handleDelete(income, target)}
-                      />
-                    </TableCell>
-                  </TableRow>
-                );
+                {
+                  return editingRow === target.type ? (
+                    <TableRow key={target.type}>
+                      <TableCell>
+                        <input
+                          type="text"
+                          value={editValues.type}
+                          onChange={(e) =>
+                            setEditValues({
+                              ...editValues,
+                              type: e.target.value,
+                            })
+                          }
+                          onKeyDown={(e) => e.key === "Enter" && handleConfirm(income)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <input
+                          type="number"
+                          value={editValues.amount}
+                          onChange={(e) =>
+                            setEditValues({
+                              ...editValues,
+                              amount: Number(e.target.value),
+                            })
+                          }
+                          onKeyDown={(e) => e.key === "Enter" && handleConfirm(income)}
+                        />
+                        <button
+                          onClick={() => handleConfirm(income)}
+                          style={{
+                            backgroundColor: "#55F5ED",
+                            color: "#282C34",
+                          }}
+                        >
+                          ✔
+                        </button>
+                        <button
+                          onClick={() => setEditingRow(null)}
+                          style={{
+                            backgroundColor: "#55F5ED",
+                            color: "#282C34",
+                          }}
+                        >
+                          ✗
+                        </button>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    <TableRow key={target.type}>
+                      <TableCell>{target.type}</TableCell>
+                      <TableCell
+                        style={{
+                          display: "flex",
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        {"₡" + target.amount}
+                        <div style={{ display: "flex", gap: "6px" }}>
+                          <Pencil
+                            onClick={() => {
+                              setEditingRow(target.type);
+                              setEditValues({
+                                type: target.type,
+                                amount: target.amount,
+                              });
+                            }}
+                          >
+                            ✏️
+                          </Pencil>
+                          <Bin
+                            src={`/productos/garbage.png`}
+                            alt="Garbage Icon"
+                            onClick={() => handleDelete(income, target)}
+                          />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                }
               })}
             </tbody>
           </StyledTable>
@@ -176,25 +288,92 @@ const Tables = ({ income, expenses, handleDelete, moneyInHand, setMoneyInHand, h
               </TableRow>
             </TableHeader>
             <tbody>
-              {expenses.map((target) => (
+              {expenses.map((target, index) => (
                 <TableRow key={`${target.type}-${target.amount}`}>
-                  <TableCell>{target.type}</TableCell>
-                  <TableCell
-                    style={{
-                      display: "flex",
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center"
-                    }}>{"₡" + target.amount}
-                    {/* Mostrar papelera solo si no es Total ni Salary */}
-                    {(target.type !== "Total" && target.type !== "Salary") && (
-                      <Bin
-                        src={`/productos/garbage.png`}
-                        alt="Garbage Icon"
-                        onClick={() => handleDelete(expenses, target)}
-                      />
-                    )}
-                  </TableCell>
+                  {editingRow === target.type ? (
+                    <>
+                      <TableCell>
+                        <input
+                          type="text"
+                          value={editValues.type}
+                          onChange={(e) =>
+                            setEditValues({
+                              ...editValues,
+                              type: e.target.value,
+                            })
+                          }
+                          onKeyDown={(e) => e.key === "Enter" && handleConfirm(expenses)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <input
+                          type="number"
+                          value={editValues.amount}
+                          onChange={(e) =>
+                            setEditValues({
+                              ...editValues,
+                              amount: Number(e.target.value),
+                            })
+                          }
+                          onKeyDown={(e) => e.key === "Enter" && handleConfirm(expenses)}
+                        />
+                        <button
+                          onClick={() => handleConfirm(expenses)}
+                          style={{
+                            backgroundColor: "#55F5ED",
+                            color: "#282C34",
+                          }}
+                        >
+                          ✔
+                        </button>
+                        <button
+                          onClick={() => setEditingRow(null)}
+                          style={{
+                            backgroundColor: "#55F5ED",
+                            color: "#282C34",
+                          }}
+                        >
+                          ✗
+                        </button>
+                      </TableCell>
+                    </>
+                  ) : (
+                    <>
+                      <TableCell>{target.type}</TableCell>
+                      <TableCell
+                        style={{
+                          display: "flex",
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        {"₡" + target.amount}
+                        {/* Mostrar papelera y lápiz solo si no es Total ni Salary */}
+                        {target.type !== "Total" &&
+                          target.type !== "Salary" && (
+                            <div style={{ display: "flex", gap: "6px" }}>
+                              <Pencil
+                                onClick={() => {
+                                  setEditingRow(target.type);
+                                  setEditValues({
+                                    type: target.type,
+                                    amount: target.amount,
+                                  });
+                                }}
+                              >
+                                ✏️
+                              </Pencil>
+                              <Bin
+                                src={`/productos/garbage.png`}
+                                alt="Garbage Icon"
+                                onClick={() => handleDelete(expenses, target)}
+                              />
+                            </div>
+                          )}
+                      </TableCell>
+                    </>
+                  )}
                 </TableRow>
               ))}
             </tbody>
@@ -223,7 +402,10 @@ const Tables = ({ income, expenses, handleDelete, moneyInHand, setMoneyInHand, h
             </TableRow>
             <TableRow>
               <TableCell>Total</TableCell>
-              <TableCell>{"₡" + (income.at(-1).amount - expenses.at(-1).amount).toString()}</TableCell>
+              <TableCell>
+                {"₡" +
+                  (income.at(-1).amount - expenses.at(-1).amount).toString()}
+              </TableCell>
             </TableRow>
             <TableRow>
               <TableCell>Money in Hand</TableCell>
