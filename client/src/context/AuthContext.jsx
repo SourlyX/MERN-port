@@ -17,7 +17,6 @@ export const AuthProvider = ({ children }) => {
         setUser(freshUser)
         setIsAuthenticated(true)
         localStorage.setItem('user', JSON.stringify(freshUser))
-        console.log('✅ Data cargada desde servidor')
       } catch (err) {
         console.error('Error cargando data:', err)
         localStorage.removeItem('user')

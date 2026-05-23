@@ -1,16 +1,16 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 // Esquema para el desglose que va DENTRO de un ingreso
 const breakdownItemSchema = new mongoose.Schema({
   label: {
     type: String,
-    required: true
+    required: true,
   },
   amount: {
     type: Number,
-    required: true
-  }
+    required: true,
+  },
 });
 
 // 1. Esquema para Ingresos y Gastos
@@ -18,69 +18,100 @@ const transactionSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
   },
   amount: {
     type: Number,
-    required: true
+    required: true,
   },
-  breakDown: [breakdownItemSchema]
+  breakDown: [breakdownItemSchema],
+  isPendingPayday: {
+    type: Boolean,
+    default: false,
+  },
+  isRecurring: {
+    type: Boolean,
+    default: false,
+  },
+  paid: {
+    type: Boolean,
+    default: false,
+  },
+  carriedOver: {
+    type: Boolean,
+    default: false,
+  },
 });
-
 // 2. Esquema para las Tareas (Todos)
 const todoSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
   },
   active: {
     type: Boolean,
     required: true,
-    default: true
-  }
+    default: true,
+  },
 });
 
 const payInfoSchema = new mongoose.Schema({
   payType: {
     type: String,
-    enum: ['Monthly', 'Biweekly', 'Weekly'],
-    default: 'Biweekly'
+    enum: ["Monthly", "Biweekly", "Weekly"],
+    default: "Biweekly",
   },
   paymentDates: {
     type: [Date],
-    default: []
+    default: [],
   },
   grossSalary: {
     type: Number,
-    default: 0
+    default: 0,
   },
   taxes: {
     type: Number,
-    default: 0
+    default: 0,
   },
   vto: {
     type: Number,
-    default: 0
+    default: 0,
   },
   ot: {
     type: Number,
-    default: 0
+    default: 0,
   },
   isSalaried: {
     type: Boolean,
-    default: false
+    default: false,
   },
   cutDays: {
-    type: [Number],
+    ype: [Number],
     default: [1, 16],
   },
-  workdayHours: {       // ✅ Nuevo campo
+  workdayHours: {
     type: Number,
     default: 8,
     min: 1,
-    max: 24
-  }
+    max: 24,
+  },
+  payDays: {
+    type: [Number],
+    default: [15, 30],
+  },
+  moneyInHand: {
+    type: Number,
+    default: 0,
+  },
+  lastOpened: {
+    type: Date,
+    default: null,
+  },
+  lastPayDate: {
+    type: Date,
+    default: null,
+  },
 });
 
 // 3. EL Esquema del USUARIO
@@ -89,17 +120,17 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    trim: true
+    trim: true,
   },
   email: {
     type: String,
     required: true,
     unique: true,
-    trim: true
+    trim: true,
   },
   password: {
     type: String,
-    required: true
+    required: true,
   },
   incomes: [transactionSchema],
   expenses: [transactionSchema],
@@ -107,8 +138,8 @@ const userSchema = new mongoose.Schema({
   payInfo: payInfoSchema,
 });
 
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) {
     return next();
   }
   const salt = await bcrypt.genSalt(10);
@@ -116,4 +147,4 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model("User", userSchema);

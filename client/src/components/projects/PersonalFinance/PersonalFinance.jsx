@@ -100,7 +100,9 @@ const PersonalFinance = () => {
     cutDays: [1, 16],
     payDays: [15, 30],
     moneyInHand: 0,
-    workdayHours: 8, // Horas trabajadas en un día laboral (valor por defecto)
+    workdayHours: 8,
+    lastOpened: null,
+    lastPayDate: null,
   });
 
   /* -------------------- Referencias -------------------- */
@@ -168,8 +170,12 @@ const PersonalFinance = () => {
         payDays: user.payInfo.payDays || [15, 30],
         moneyInHand: user.payInfo.moneyInHand || 0,
         workdayHours: user.payInfo.workdayHours || 8,
+        lastOpened: user.payInfo.lastOpened || null,
+        lastPayDate: user.payInfo.lastPayDate || null,
       });
     }
+    console.log("useEffect");
+    checkPeriodChange(user);
   }, [isAuthenticated, user]);
 
   /**
@@ -185,7 +191,6 @@ const PersonalFinance = () => {
         const payload = buildPayload();
         const updatedUser = await updateUserData(payload);
         updateUser(updatedUser);
-        console.log("✅ CutDays auto-guardados");
       } catch (err) {
         console.error("Error al auto-guardar cutDays:", err);
       }
@@ -223,7 +228,6 @@ const PersonalFinance = () => {
         const payload = buildPayload({ vto: 0, ot: 0 });
         const updatedUser = await updateUserData(payload);
         updateUser(updatedUser);
-        console.log("✅ Periodo auto-guardado (VTO/OT reseteados)");
       } catch (err) {
         console.error("Error al auto-guardar periodo:", err);
       }
@@ -259,10 +263,158 @@ const PersonalFinance = () => {
 
   /* -------------------- Estado para nuevos registros -------------------- */
 
-  const [newIncome, setNewIncome] = useState();
+  const [newIncome, setNewIncome] = useState(0);
   const [incomeType, setIncomeType] = useState("");
-  const [newExpense, setNewExpense] = useState();
+  const [newExpense, setNewExpense] = useState(0);
   const [expenseType, setExpenseType] = useState("");
+
+  /* -------------------- Lógica de períodos de pago y corte -------------------- */
+
+  /** Verifica si el usuario ha pasado por un nuevo período de pago o corte
+   * desde la última vez que abrió la aplicación. Si es así, actualiza los datos
+   * de ingresos/gastos y fechas en consecuencia.
+   * @param {Object} user - Datos del usuario autenticado
+   */
+  const checkPeriodChange = (user) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (!user.payInfo?.lastOpened) {
+      updateUserData({
+        ...buildPayload(),
+        payInfo: { ...buildPayload().payInfo, lastOpened: today.toISOString() },
+      });
+      return;
+    }
+
+    const lastOpened = new Date(user.payInfo.lastOpened);
+    lastOpened.setHours(0, 0, 0, 0);
+
+    const startDate = user.payInfo.lastPayDate
+      ? new Date(user.payInfo.lastPayDate)
+      : lastOpened;
+    startDate.setHours(0, 0, 0, 0);
+
+    const rawCutDays = user.payInfo.cutDays || [1, 16];
+
+    const getCutDates = (from, to) => {
+      const dates = [];
+      let year = from.getFullYear();
+      let month = from.getMonth();
+
+      while (new Date(year, month, 1) <= to) {
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        const uniqueDays = [
+          ...new Set(rawCutDays.map((d) => Math.min(d, lastDay))),
+        ];
+
+        for (const day of uniqueDays) {
+          const cutDate = new Date(year, month, day);
+          cutDate.setHours(0, 0, 0, 0);
+          if (cutDate > from && cutDate <= to) {
+            dates.push(cutDate);
+          }
+        }
+
+        month++;
+        if (month > 11) {
+          month = 0;
+          year++;
+        }
+      }
+
+      return dates;
+    };
+
+    const missedCutDates = getCutDates(startDate, today);
+    const count = missedCutDates.length;
+
+    if (count === 0) return;
+
+    const lastCutDate = missedCutDates[missedCutDates.length - 1];
+
+    const totalExpenses = expenses.at(-1)?.amount || 0;
+    const totalIncome =
+      income.filter((i) => !i.isPendingPayday).at(-1)?.amount || 0;
+    const realBalance =
+      (user.payInfo.moneyInHand || 0) + (totalIncome - totalExpenses);
+
+    if (count === 1) {
+      const netSalary =
+        user.incomes?.find((i) => i.type === "Net Salary")?.amount || 0;
+
+      const updatedIncome =
+        netSalary > 0
+          ? [
+              ...(user.incomes?.slice(0, -1) || []),
+              {
+                type: "Pending payday",
+                amount: netSalary,
+                isPendingPayday: true,
+              },
+              user.incomes?.at(-1),
+            ]
+          : user.incomes;
+
+      const payload = buildPayload({
+        vto: "",
+        ot: "",
+        moneyInHand: realBalance,
+        lastPayDate: lastCutDate.toISOString(),
+        lastOpened: today.toISOString(),
+      });
+      payload.incomes = updatedIncome;
+
+      updateUserData(payload)
+        .then((updatedUser) => {
+          updateUser(updatedUser);
+          setIncome(updatedIncome);
+          setSalaryData((prev) => ({
+            ...prev,
+            vto: "",
+            ot: "",
+            moneyInHand: realBalance,
+            lastPayDate: lastCutDate.toISOString(),
+            lastOpened: today.toISOString(),
+          }));
+        })
+        .catch(console.error);
+    } else {
+      const finalExpenses = [
+        ...updatedExpenses,
+        {
+          type: "Total",
+          amount: updatedExpenses.reduce((s, e) => s + e.amount, 0),
+        },
+      ];
+
+      const payload = buildPayload({
+        vto: "",
+        ot: "",
+        moneyInHand: realBalance,
+        lastPayDate: lastCutDate.toISOString(),
+        lastOpened: today.toISOString(),
+      });
+      payload.incomes = defaultIncome;
+      payload.expenses = finalExpenses; // ← ya no lo calculas inline
+
+      updateUserData(payload)
+        .then((updatedUser) => {
+          updateUser(updatedUser);
+          setIncome(defaultIncome);
+          setExpenses(finalExpenses);
+          setSalaryData((prev) => ({
+            ...prev,
+            vto: "",
+            ot: "",
+            moneyInHand: realBalance,
+            lastPayDate: lastCutDate.toISOString(),
+            lastOpened: today.toISOString(),
+          }));
+        })
+        .catch(console.error);
+    }
+  };
 
   /**
    * Agrega un nuevo ingreso a la lista, validando que se haya
