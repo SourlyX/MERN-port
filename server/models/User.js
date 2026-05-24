@@ -87,7 +87,7 @@ const payInfoSchema = new mongoose.Schema({
     default: false,
   },
   cutDays: {
-    ype: [Number],
+    type: [Number],
     default: [1, 16],
   },
   workdayHours: {

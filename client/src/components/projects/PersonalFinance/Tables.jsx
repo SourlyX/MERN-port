@@ -189,6 +189,28 @@ const Tables = ({
                   );
                 }
 
+                /* Fila de ingreso pendiente de pago (estilizada en gris e itálica) */
+                if (target.isPendingPayday) {
+                  return (
+                    <TableRow key={target.type + target.amount}>
+                      <TableCell
+                        style={{ color: "#9e9e9e", fontStyle: "italic" }}
+                      >
+                        ⏳ {target.type}
+                      </TableCell>
+                      <TableCell
+                        style={{
+                          color: "#9e9e9e",
+                          fontStyle: "italic",
+                          textAlign: "right",
+                        }}
+                      >
+                        {"₡" + parseFloat(target.amount).toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                }
+
                 /* Fila genérica de ingreso con opción de eliminar */
                 {
                   return editingRow === target.type ? (
@@ -203,7 +225,9 @@ const Tables = ({
                               type: e.target.value,
                             })
                           }
-                          onKeyDown={(e) => e.key === "Enter" && handleConfirm(income)}
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && handleConfirm(income)
+                          }
                         />
                       </TableCell>
                       <TableCell>
@@ -216,7 +240,9 @@ const Tables = ({
                               amount: Number(e.target.value),
                             })
                           }
-                          onKeyDown={(e) => e.key === "Enter" && handleConfirm(income)}
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && handleConfirm(income)
+                          }
                         />
                         <button
                           onClick={() => handleConfirm(income)}
@@ -302,7 +328,9 @@ const Tables = ({
                               type: e.target.value,
                             })
                           }
-                          onKeyDown={(e) => e.key === "Enter" && handleConfirm(expenses)}
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && handleConfirm(expenses)
+                          }
                         />
                       </TableCell>
                       <TableCell>
@@ -315,7 +343,9 @@ const Tables = ({
                               amount: Number(e.target.value),
                             })
                           }
-                          onKeyDown={(e) => e.key === "Enter" && handleConfirm(expenses)}
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && handleConfirm(expenses)
+                          }
                         />
                         <button
                           onClick={() => handleConfirm(expenses)}
