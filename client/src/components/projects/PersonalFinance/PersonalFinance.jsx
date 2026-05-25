@@ -40,6 +40,12 @@ const IncAndExpContainer = styled.div`
   width: auto;
 `;
 
+/** Contenedor específico para los inputs de gastos, con animación para el campo "available from" */
+const ExpenseInputContainer = styled(IncAndExpContainer)`
+  min-height: 70px;
+  align-items: center;
+`;
+
 /** Botón estilizado para guardar cambios en la base de datos */
 const SaveButton = styled.button`
   padding: 10px 20px;
@@ -65,6 +71,42 @@ const Input = styled.input`
   border: 1px solid #4fffff;
 `;
 
+const AvailableFromWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  animation: ${({ $leaving }) => ($leaving ? "slideOut" : "slideIn")} 300ms ease
+    forwards;
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-20px) translateY(-6px);
+      max-width: 0;
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) translateY(0);
+      max-width: 120px;
+    }
+  }
+
+  @keyframes slideOut {
+    from {
+      opacity: 1;
+      transform: translateX(0) translateY(0);
+      max-width: 120px;
+    }
+    to {
+      opacity: 0;
+      transform: translateX(-20px) translateY(-6px);
+      max-width: 0;
+    }
+  }
+`;
+
 /* ======================== Componente Principal ======================== */
 
 const PersonalFinance = () => {
@@ -79,17 +121,20 @@ const PersonalFinance = () => {
 
   /** Gastos iniciales cuando no hay datos del usuario */
   const defaultExpenses = [
-    { type: "Dwelling", amount: 140000 },
-    { type: "Telephone Bill", amount: 44000 },
-    { type: "Internet Bill", amount: 29000 },
-    { type: "Education", amount: 27000 },
-    { type: "Total", amount: 240000 },
+    { type: "Dwelling", amount: 140000, isRecurring: true, paid: false },
+    { type: "Telephone Bill", amount: 44000, isRecurring: true, paid: false },
+    { type: "Internet Bill", amount: 29000, isRecurring: true, paid: false },
+    { type: "Total", amount: 213000 },
   ];
 
   /* -------------------- Estado del componente -------------------- */
 
   const [income, setIncome] = useState(defaultIncome);
   const [expenses, setExpenses] = useState(defaultExpenses);
+  const [expenseIsRecurring, setExpenseIsRecurring] = useState(true);
+  const [availableFrom, setAvailableFrom] = useState(1);
+  const [showAvailable, setShowAvailable] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
   const [dateRange, setDateRange] = useState([null, null]);
   const [salaryData, setSalaryData] = useState({
     grossSalary: "",
@@ -148,7 +193,15 @@ const PersonalFinance = () => {
     );
     setExpenses(
       user.expenses && user.expenses.length > 0
-        ? user.expenses
+        ? user.expenses.map((e) =>
+            e.type === "Total"
+              ? e
+              : {
+                  ...e,
+                  isRecurring: e.isRecurring ?? false,
+                  paid: e.paid ?? false,
+                },
+          )
         : defaultExpenses,
     );
 
@@ -447,9 +500,26 @@ const PersonalFinance = () => {
 
       // 6. Múltiples períodos
     } else {
+      const baseExpenses = user.expenses?.slice(0, -1) || [];
+
+      const nextExpenses = baseExpenses
+        .filter((e) => e.isRecurring)
+        .map((e) => ({
+          ...e,
+          paid: false,
+          carriedOver: e.isRecurring && !e.paid ? true : false,
+        }));
+
+      const nextTotal = {
+        type: "Total",
+        amount: nextExpenses.reduce((sum, e) => sum + e.amount, 0),
+      };
+
+      const finalExpenses = [...nextExpenses, nextTotal];
+
       await updateUserData({
         incomes: defaultIncome,
-        expenses: defaultExpenses,
+        expenses: finalExpenses,
         payInfo: {
           ...user.payInfo,
           vto: "",
@@ -462,7 +532,7 @@ const PersonalFinance = () => {
         .then((updatedUser) => {
           updateUser(updatedUser);
           setIncome(defaultIncome);
-          setExpenses(defaultExpenses);
+          setExpenses(finalExpenses);
           setSalaryData((prev) => ({
             ...prev,
             vto: "",
@@ -525,6 +595,9 @@ const PersonalFinance = () => {
     const newExpenseObject = {
       type: expenseType,
       amount: parseFloat(newExpense),
+      isRecurring: expenseIsRecurring,
+      paid: false,
+      ...(expenseIsRecurring && { availableFrom }),
     };
 
     const currentExpenses = expenses.slice(0, -1);
@@ -645,7 +718,7 @@ const PersonalFinance = () => {
       </IncAndExpContainer>
 
       {/* Sección de entrada para nuevos gastos */}
-      <IncAndExpContainer>
+      <ExpenseInputContainer>
         <Input
           value={expenseType}
           placeholder="Type of expense"
@@ -657,7 +730,7 @@ const PersonalFinance = () => {
             border: "1px solid #4fffff",
           }}
           onChange={(e) => setExpenseType(e.target.value)}
-        ></Input>
+        />
         <Input
           type="number"
           placeholder="Expense amount"
@@ -669,8 +742,96 @@ const PersonalFinance = () => {
           }}
           value={newExpense}
           onChange={(e) => setNewExpense(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addExpense(newExpense)}
+          onKeyDown={(e) => e.key === "Enter" && addExpense()}
         />
+
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "4px",
+          }}
+        >
+          <label style={{ fontSize: "11px", color: "#aaa" }}>Recurring</label>
+          <label
+            style={{
+              position: "relative",
+              display: "inline-block",
+              width: "46px",
+              height: "24px",
+              cursor: "pointer",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={expenseIsRecurring}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setExpenseIsRecurring(checked);
+                if (checked) {
+                  setShowAvailable(true);
+                  setIsLeaving(false);
+                } else {
+                  setIsLeaving(true);
+                  setTimeout(() => {
+                    setShowAvailable(false);
+                    setIsLeaving(false);
+                  }, 300);
+                }
+              }}
+              style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
+            />
+            <span
+              style={{
+                position: "absolute",
+                inset: 0,
+                backgroundColor: expenseIsRecurring ? "#55F5ED" : "#555",
+                borderRadius: "24px",
+                transition: "background-color 300ms ease",
+              }}
+            />
+            <span
+              style={{
+                position: "absolute",
+                top: "3px",
+                left: expenseIsRecurring ? "25px" : "3px",
+                width: "18px",
+                height: "18px",
+                backgroundColor: "#282C34",
+                borderRadius: "50%",
+                transition: "left 300ms ease",
+              }}
+            />
+          </label>
+        </div>
+
+        {showAvailable && (
+          <AvailableFromWrapper $leaving={isLeaving}>
+            <label
+              style={{ fontSize: "11px", color: "#aaa", whiteSpace: "nowrap" }}
+            >
+              Available from day
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={31}
+              value={availableFrom}
+              onChange={(e) => setAvailableFrom(parseInt(e.target.value) || 1)}
+              style={{
+                width: "50px",
+                height: "35px",
+                borderRadius: "10px",
+                textAlign: "center",
+                border: "1px solid #4fffff",
+                backgroundColor: "transparent",
+                color: "#f0f0f0",
+              }}
+            />
+          </AvailableFromWrapper>
+        )}
+
         <button
           style={{
             height: "35px",
@@ -685,7 +846,7 @@ const PersonalFinance = () => {
         >
           Add
         </button>
-      </IncAndExpContainer>
+      </ExpenseInputContainer>
 
       {/* Componente de flujo de ingresos y configuración salarial */}
       <IncomeFlow

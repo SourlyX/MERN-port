@@ -41,6 +41,10 @@ const transactionSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  availableFrom: {
+    type: Number,
+    default: null,
+  },
 });
 // 2. Esquema para las Tareas (Todos)
 const todoSchema = new mongoose.Schema({
