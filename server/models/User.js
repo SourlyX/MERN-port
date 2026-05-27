@@ -29,9 +29,22 @@ const transactionSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  isRecurring: {
-    type: Boolean,
-    default: false,
+  frequency: {
+    type: String,
+    enum: [
+      "biweekly",
+      "monthly",
+      "quarterly",
+      "fourmonthly",
+      "semiannual",
+      "annual",
+      null,
+    ],
+    default: null,
+  },
+  appearsFrom: {
+    type: Date,
+    default: null,
   },
   paid: {
     type: Boolean,
@@ -41,11 +54,8 @@ const transactionSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  availableFrom: {
-    type: Number,
-    default: null,
-  },
 });
+
 // 2. Esquema para las Tareas (Todos)
 const todoSchema = new mongoose.Schema({
   name: {

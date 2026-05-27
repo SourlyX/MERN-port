@@ -114,16 +114,32 @@ const Tables = ({
   income,
   expenses,
   handleDelete,
+  handleTogglePaid,
   moneyInHand,
   setMoneyInHand,
   handleEdit,
 }) => {
+  /* Estados para controlar la edición de filas en las tablas */
+  const [editingRow, setEditingRow] = useState(null); // Estado para controlar qué fila se está editando
+  const [editValues, setEditValues] = useState({
+    type: "",
+    amount: "",
+    frequency: null,
+    startDay: 1,
+  }); // Estado para los valores editados
+
+  /* Función para confirmar la edición de un registro, llamando a handleEdit con los nuevos valores */
   const handleConfirm = (table) => {
-    handleEdit(table, editingRow, editValues.type, editValues.amount);
+    handleEdit(
+      table,
+      editingRow,
+      editValues.type,
+      editValues.amount,
+      editValues.frequency,
+      editValues.startDay,
+    );
     setEditingRow(null);
   };
-  const [editingRow, setEditingRow] = useState(null); // Estado para controlar qué fila se está editando
-  const [editValues, setEditValues] = useState({ type: "", amount: "" }); // Estado para los valores editados
 
   return (
     <>
@@ -283,6 +299,8 @@ const Tables = ({
                               setEditValues({
                                 type: target.type,
                                 amount: target.amount,
+                                frequency: target.frequency || null,
+                                startDay: 1,
                               });
                             }}
                           >
@@ -314,11 +332,31 @@ const Tables = ({
               </TableRow>
             </TableHeader>
             <tbody>
-              {expenses.map((target, index) => (
-                <TableRow key={`${target.type}-${target.amount}`}>
-                  {editingRow === target.type ? (
-                    <>
+              {expenses.map((target, index) => {
+                if (target.type === "Total") {
+                  return (
+                    <TableRow key="total-expenses">
                       <TableCell>
+                        <strong>Total</strong>
+                      </TableCell>
+                      <TableCell style={{ textAlign: "right" }}>
+                        <strong>{"₡" + target.amount}</strong>
+                      </TableCell>
+                    </TableRow>
+                  );
+                }
+
+                return editingRow === target.type ? (
+                  <TableRow key={`${target.type}-${index}`}>
+                    <TableCell colSpan={2}>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: "6px",
+                          alignItems: "center",
+                        }}
+                      >
                         <input
                           type="text"
                           value={editValues.type}
@@ -331,9 +369,8 @@ const Tables = ({
                           onKeyDown={(e) =>
                             e.key === "Enter" && handleConfirm(expenses)
                           }
+                          style={{ flex: "1", minWidth: "80px" }}
                         />
-                      </TableCell>
-                      <TableCell>
                         <input
                           type="number"
                           value={editValues.amount}
@@ -346,7 +383,76 @@ const Tables = ({
                           onKeyDown={(e) =>
                             e.key === "Enter" && handleConfirm(expenses)
                           }
+                          style={{ flex: "1", minWidth: "80px" }}
                         />
+                        <select
+                          value={editValues.frequency || "none"}
+                          onChange={(e) =>
+                            setEditValues({
+                              ...editValues,
+                              frequency:
+                                e.target.value === "none"
+                                  ? null
+                                  : e.target.value,
+                            })
+                          }
+                          style={{
+                            flex: "1",
+                            minWidth: "100px",
+                            height: "30px",
+                            borderRadius: "8px",
+                          }}
+                        >
+                          <option value="none">None</option>
+                          <option value="biweekly">Biweekly</option>
+                          <option value="monthly">Monthly</option>
+                          <option value="quarterly">Quarterly</option>
+                          <option value="fourmonthly">Four-monthly</option>
+                          <option value="semiannual">Semiannual</option>
+                          <option value="annual">Annual</option>
+                        </select>
+                        {editValues.frequency && (
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              gap: "4px",
+                            }}
+                          >
+                            <label
+                              style={{
+                                fontSize: "11px",
+                                color: "#aaa",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              Start day
+                            </label>
+                            <input
+                              type="number"
+                              min={1}
+                              max={31}
+                              value={editValues.startDay}
+                              onChange={(e) =>
+                                setEditValues({
+                                  ...editValues,
+                                  startDay: parseInt(e.target.value) || 1,
+                                })
+                              }
+                              style={{
+                                width: "50px",
+                                height: "30px",
+                                borderRadius: "8px",
+                                textAlign: "center",
+                                border: "1px solid #4fffff",
+                                backgroundColor: "transparent",
+                                color: "#f0f0f0",
+                              }}
+                            />
+                          </div>
+                        )}
+
                         <button
                           onClick={() => handleConfirm(expenses)}
                           style={{
@@ -365,47 +471,79 @@ const Tables = ({
                         >
                           ✗
                         </button>
-                      </TableCell>
-                    </>
-                  ) : (
-                    <>
-                      <TableCell>{target.type}</TableCell>
-                      <TableCell
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  <TableRow key={`${target.type}-${index}`}>
+                    <TableCell>
+                      <div
                         style={{
                           display: "flex",
-                          flexDirection: "row",
-                          justifyContent: "space-between",
                           alignItems: "center",
+                          gap: "8px",
                         }}
                       >
-                        {"₡" + target.amount}
-                        {/* Mostrar papelera y lápiz solo si no es Total ni Salary */}
-                        {target.type !== "Total" &&
-                          target.type !== "Salary" && (
-                            <div style={{ display: "flex", gap: "6px" }}>
-                              <Pencil
-                                onClick={() => {
-                                  setEditingRow(target.type);
-                                  setEditValues({
-                                    type: target.type,
-                                    amount: target.amount,
-                                  });
-                                }}
-                              >
-                                ✏️
-                              </Pencil>
-                              <Bin
-                                src={`/productos/garbage.png`}
-                                alt="Garbage Icon"
-                                onClick={() => handleDelete(expenses, target)}
-                              />
-                            </div>
+                        <input
+                          type="checkbox"
+                          checked={!!target.paid}
+                          onChange={() => handleTogglePaid(index)}
+                          style={{ cursor: "pointer" }}
+                        />
+                        <span
+                          style={{ color: target.paid ? "#f0f0f0" : "#9e9e9e" }}
+                        >
+                          {target.carriedOver && "⚠️ "}
+                          {target.type}
+                          {target.frequency && (
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                marginLeft: "6px",
+                                color: "#aaa",
+                              }}
+                            >
+                              ({target.frequency})
+                            </span>
                           )}
-                      </TableCell>
-                    </>
-                  )}
-                </TableRow>
-              ))}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span
+                        style={{ color: target.paid ? "#f0f0f0" : "#9e9e9e" }}
+                      >
+                        {"₡" + target.amount}
+                      </span>
+                      <div style={{ display: "flex", gap: "6px" }}>
+                        <Pencil
+                          onClick={() => {
+                            setEditingRow(target.type);
+                            setEditValues({
+                              type: target.type,
+                              amount: target.amount,
+                              frequency: target.frequency || null,
+                            });
+                          }}
+                        >
+                          ✏️
+                        </Pencil>
+                        <Bin
+                          src="/productos/garbage.png"
+                          alt="Garbage Icon"
+                          onClick={() => handleDelete(expenses, target)}
+                        />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </tbody>
           </StyledTable>
         </TableContainer>

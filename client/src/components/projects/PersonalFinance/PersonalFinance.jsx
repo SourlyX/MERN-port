@@ -71,6 +71,7 @@ const Input = styled.input`
   border: 1px solid #4fffff;
 `;
 
+/** Contenedor para el campo "available from" con animación de entrada/salida */
 const AvailableFromWrapper = styled.div`
   display: flex;
   flex-direction: column;
@@ -107,6 +108,44 @@ const AvailableFromWrapper = styled.div`
   }
 `;
 
+/** Contenedor para campos adicionales de frecuencia con animación de entrada/salida */
+const FrequencyExtrasWrapper = styled.div`
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  overflow: hidden;
+  animation: ${({ $leaving }) => ($leaving ? "extrasOut" : "extrasIn")} 300ms
+    ease forwards;
+
+  @keyframes extrasIn {
+    from {
+      opacity: 0;
+      transform: translateX(-20px) translateY(-6px);
+      max-width: 0;
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) translateY(0);
+      max-width: 400px;
+    }
+  }
+
+  @keyframes extrasOut {
+    from {
+      opacity: 1;
+      transform: translateX(0) translateY(0);
+      max-width: 400px;
+    }
+    to {
+      opacity: 0;
+      transform: translateX(-20px) translateY(-6px);
+      max-width: 0;
+    }
+  }
+`;
+
 /* ======================== Componente Principal ======================== */
 
 const PersonalFinance = () => {
@@ -121,18 +160,46 @@ const PersonalFinance = () => {
 
   /** Gastos iniciales cuando no hay datos del usuario */
   const defaultExpenses = [
-    { type: "Dwelling", amount: 140000, isRecurring: true, paid: false },
-    { type: "Telephone Bill", amount: 44000, isRecurring: true, paid: false },
-    { type: "Internet Bill", amount: 29000, isRecurring: true, paid: false },
-    { type: "Total", amount: 213000 },
+    {
+      type: "Dwelling",
+      amount: 100000,
+      frequency: "monthly",
+      paid: false,
+      carriedOver: false,
+    },
+    {
+      type: "Telephone Bill",
+      amount: 44000,
+      frequency: "monthly",
+      paid: false,
+      carriedOver: false,
+    },
+    {
+      type: "Internet Bill",
+      amount: 29000,
+      frequency: "monthly",
+      paid: false,
+      carriedOver: false,
+    },
+    {
+      type: "Education",
+      amount: 27000,
+      frequency: "monthly",
+      paid: false,
+      carriedOver: false,
+    },
+    { type: "Total", amount: 200000 },
   ];
 
   /* -------------------- Estado del componente -------------------- */
 
   const [income, setIncome] = useState(defaultIncome);
   const [expenses, setExpenses] = useState(defaultExpenses);
-  const [expenseIsRecurring, setExpenseIsRecurring] = useState(true);
-  const [availableFrom, setAvailableFrom] = useState(1);
+  const [expenseFrequency, setExpenseFrequency] = useState(null);
+  const [expenseStartDate, setExpenseStartDate] = useState("");
+  const [expenseStartDate2, setExpenseStartDate2] = useState("");
+  const [showFrequencyExtras, setShowFrequencyExtras] = useState(false);
+  const [isLeavingExtras, setIsLeavingExtras] = useState(false);
   const [showAvailable, setShowAvailable] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
   const [dateRange, setDateRange] = useState([null, null]);
@@ -503,19 +570,14 @@ const PersonalFinance = () => {
       const baseExpenses = user.expenses?.slice(0, -1) || [];
 
       const nextExpenses = baseExpenses
-        .filter((e) => e.isRecurring)
+        .filter((e) => e.frequency)
         .map((e) => ({
           ...e,
           paid: false,
-          carriedOver: e.isRecurring && !e.paid ? true : false,
+          carriedOver: !e.paid,
         }));
 
-      const nextTotal = {
-        type: "Total",
-        amount: nextExpenses.reduce((sum, e) => sum + e.amount, 0),
-      };
-
-      const finalExpenses = [...nextExpenses, nextTotal];
+      const finalExpenses = [...nextExpenses, { type: "Total", amount: 0 }];
 
       await updateUserData({
         incomes: defaultIncome,
@@ -544,6 +606,26 @@ const PersonalFinance = () => {
         })
         .catch(console.error);
     }
+  };
+
+  /** Alterna el estado de pago de un gasto recurrente y recalcula el total considerando solo los gastos pagados.
+   * @param {number} index - Índice del gasto a modificar en la lista de expenses.
+   */
+  const handleTogglePaid = (index) => {
+    const updatedExpenses = expenses.map((e, i) =>
+      i === index ? { ...e, paid: !e.paid } : e,
+    );
+
+    const currentExpenses = updatedExpenses.slice(0, -1);
+    const newTotalAmount = currentExpenses.reduce(
+      (sum, e) => sum + (e.paid ? e.amount : 0),
+      0,
+    );
+
+    setExpenses([
+      ...currentExpenses,
+      { type: "Total", amount: newTotalAmount },
+    ]);
   };
 
   /**
@@ -578,9 +660,19 @@ const PersonalFinance = () => {
     setIncomeType("");
   };
 
+  const anticipationMonths = {
+    biweekly: 0,
+    monthly: 0,
+    quarterly: 1,
+    fourmonthly: 1,
+    semiannual: 2,
+    annual: 3,
+  };
+
   /**
-   * Agrega un nuevo gasto a la lista, validando que se haya
-   * ingresado un monto y seleccionado un tipo. Recalcula el total.
+   * Agrega un nuevo gasto a la lista, validando que se haya ingresado un monto,
+   * seleccionado un tipo y, si es recurrente, configurado la frecuencia y fecha de inicio.
+   * Recalcula el total considerando solo los gastos pagados.
    */
   const addExpense = () => {
     if (!newExpense) {
@@ -591,26 +683,57 @@ const PersonalFinance = () => {
       alert("Please input an expense type");
       return;
     }
+    if (expenseFrequency && !expenseStartDate) {
+      alert("Please select a start date");
+      return;
+    }
+    if (expenseFrequency === "biweekly" && !expenseStartDate2) {
+      alert("Please select the second biweekly date");
+      return;
+    }
+
+    let appearsFrom = null;
+    if (expenseFrequency) {
+      const start = new Date(expenseStartDate);
+      const months = anticipationMonths[expenseFrequency] || 0;
+      appearsFrom = new Date(
+        start.getFullYear(),
+        start.getMonth() - months,
+        1,
+      ).toISOString();
+    }
+
+    const hasFrequency = !!expenseFrequency;
 
     const newExpenseObject = {
       type: expenseType,
       amount: parseFloat(newExpense),
-      isRecurring: expenseIsRecurring,
-      paid: false,
-      ...(expenseIsRecurring && { availableFrom }),
+      frequency: expenseFrequency || null,
+      appearsFrom,
+      paid: !hasFrequency,
+      carriedOver: false,
+      ...(expenseFrequency === "biweekly" && {
+        startDate2: new Date(expenseStartDate2).toISOString(),
+      }),
     };
 
     const currentExpenses = expenses.slice(0, -1);
-    const oldTotal = expenses.at(-1);
     const updatedExpenses = [...currentExpenses, newExpenseObject];
-    const newTotal = {
-      type: "Total",
-      amount: oldTotal.amount + newExpenseObject.amount,
-    };
+    const newTotalAmount = updatedExpenses.reduce(
+      (sum, e) => sum + (e.paid ? e.amount : 0),
+      0,
+    );
 
-    setExpenses([...updatedExpenses, newTotal]);
+    setExpenses([
+      ...updatedExpenses,
+      { type: "Total", amount: newTotalAmount },
+    ]);
     setNewExpense("");
     setExpenseType("");
+    setExpenseFrequency(null);
+    setExpenseStartDate("");
+    setExpenseStartDate2("");
+    setShowFrequencyExtras(false);
   };
 
   /**
@@ -622,31 +745,35 @@ const PersonalFinance = () => {
     setSalaryData((prev) => ({ ...prev, moneyInHand: value }));
 
   /**
-   * Elimina un elemento (ingreso o gasto) de la lista correspondiente
-   * y recalcula el total automáticamente.
+   * Elimina un ingreso o gasto de la lista correspondiente y recalcula el total automáticamente.
+   * Si el gasto tiene frecuencia, solicita confirmación antes de eliminar.
    * @param {Array} typeFromDelete - Lista de origen (income o expenses)
    * @param {Object} target - Elemento a eliminar
    */
   const handleDelete = (typeFromDelete, target) => {
-    const updatedType = typeFromDelete.filter((type) => {
-      return type !== target;
-    });
+    if (target.frequency) {
+      const label =
+        target.frequency.charAt(0).toUpperCase() + target.frequency.slice(1);
+      const confirmed = window.confirm(
+        `Are you sure you want to delete this ${label} payment?`,
+      );
+      if (!confirmed) return;
+    }
 
+    const updatedType = typeFromDelete.filter((item) => item !== target);
     const currentType = updatedType.slice(0, -1);
+
     const newTotalAmount = currentType.reduce((sum, item) => {
+      if (typeFromDelete === expenses)
+        return sum + (item.paid ? item.amount : 0);
       return sum + Number(item.amount);
     }, 0);
 
-    const newTotalObject = {
-      type: "Total",
-      amount: newTotalAmount,
-    };
+    const newTotalObject = { type: "Total", amount: newTotalAmount };
 
-    if (typeFromDelete === income) {
-      setIncome([...currentType, newTotalObject]);
-    } else if (typeFromDelete === expenses) {
+    if (typeFromDelete === income) setIncome([...currentType, newTotalObject]);
+    else if (typeFromDelete === expenses)
       setExpenses([...currentType, newTotalObject]);
-    }
   };
 
   /**
@@ -656,29 +783,72 @@ const PersonalFinance = () => {
    * @param {Object} target - Elemento a editar
    * @param {string} newType - Nuevo nombre/tipo del elemento
    * @param {number} newAmount - Nuevo monto del elemento
+   * @param {string} newFrequency - Nueva frecuencia del elemento
+   * @param {number} startDay - Día de inicio para la frecuencia
    */
-  const handleEdit = (typeArray, target, newType, newAmount) => {
-    const updatedType = typeArray.map((type) => {
-      if (type.type === target) {
-        return { ...target, type: newType, amount: parseFloat(newAmount) };
+  const handleEdit = (
+    typeArray,
+    target,
+    newType,
+    newAmount,
+    newFrequency,
+    startDay,
+  ) => {
+    let appearsFrom = null;
+    if (newFrequency) {
+      const today = new Date();
+      const months = anticipationMonths[newFrequency] || 0;
+      appearsFrom = new Date(
+        today.getFullYear(),
+        today.getMonth() - months,
+        startDay || 1,
+      ).toISOString();
+    }
+
+    const updatedType = typeArray.map((item) => {
+      if (item.type === target) {
+        return {
+          ...item,
+          type: newType,
+          amount: parseFloat(newAmount),
+          frequency: newFrequency || null,
+          appearsFrom,
+        };
       }
-      return type;
+      return item;
     });
 
     const currentType = updatedType.slice(0, -1);
     const newTotalAmount = currentType.reduce((sum, item) => {
+      if (typeArray === expenses) return sum + (item.paid ? item.amount : 0);
       return sum + Number(item.amount);
     }, 0);
 
-    const newTotalObject = {
-      type: "Total",
-      amount: newTotalAmount,
-    };
+    const newTotalObject = { type: "Total", amount: newTotalAmount };
 
-    if (typeArray === income) {
-      setIncome([...currentType, newTotalObject]);
-    } else if (typeArray === expenses) {
+    if (typeArray === income) setIncome([...currentType, newTotalObject]);
+    else if (typeArray === expenses)
       setExpenses([...currentType, newTotalObject]);
+  };
+
+  /** Maneja el cambio de frecuencia para un gasto recurrente, mostrando u ocultando los campos
+   * adicionales de fecha de inicio según corresponda, y reseteando las fechas al ocultar.
+   * @param {string} value - Nueva frecuencia seleccionada (o "none" para eliminar la frecuencia)
+   * */
+  const handleFrequencyChange = (value) => {
+    const freq = value === "none" ? null : value;
+    setExpenseFrequency(freq);
+    if (freq) {
+      setShowFrequencyExtras(true);
+      setIsLeavingExtras(false);
+    } else {
+      setIsLeavingExtras(true);
+      setTimeout(() => {
+        setShowFrequencyExtras(false);
+        setIsLeavingExtras(false);
+        setExpenseStartDate("");
+        setExpenseStartDate2("");
+      }, 300);
     }
   };
 
@@ -753,83 +923,99 @@ const PersonalFinance = () => {
             gap: "4px",
           }}
         >
-          <label style={{ fontSize: "11px", color: "#aaa" }}>Recurring</label>
-          <label
+          <label style={{ fontSize: "11px", color: "#aaa" }}>Frequency</label>
+          <select
+            value={expenseFrequency || "none"}
+            onChange={(e) => handleFrequencyChange(e.target.value)}
             style={{
-              position: "relative",
-              display: "inline-block",
-              width: "46px",
-              height: "24px",
+              height: "35px",
+              borderRadius: "10px",
+              padding: "0 8px",
+              backgroundColor: expenseFrequency ? "#55F5ED" : "#383838",
+              color: expenseFrequency ? "#282C34" : "#f0f0f0",
+              border: "1px solid #4fffff",
               cursor: "pointer",
+              transition: "background-color 300ms ease, color 300ms ease",
             }}
           >
-            <input
-              type="checkbox"
-              checked={expenseIsRecurring}
-              onChange={(e) => {
-                const checked = e.target.checked;
-                setExpenseIsRecurring(checked);
-                if (checked) {
-                  setShowAvailable(true);
-                  setIsLeaving(false);
-                } else {
-                  setIsLeaving(true);
-                  setTimeout(() => {
-                    setShowAvailable(false);
-                    setIsLeaving(false);
-                  }, 300);
-                }
-              }}
-              style={{ opacity: 0, width: 0, height: 0, position: "absolute" }}
-            />
-            <span
-              style={{
-                position: "absolute",
-                inset: 0,
-                backgroundColor: expenseIsRecurring ? "#55F5ED" : "#555",
-                borderRadius: "24px",
-                transition: "background-color 300ms ease",
-              }}
-            />
-            <span
-              style={{
-                position: "absolute",
-                top: "3px",
-                left: expenseIsRecurring ? "25px" : "3px",
-                width: "18px",
-                height: "18px",
-                backgroundColor: "#282C34",
-                borderRadius: "50%",
-                transition: "left 300ms ease",
-              }}
-            />
-          </label>
+            <option value="none">None</option>
+            <option value="biweekly">Biweekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="quarterly">Quarterly</option>
+            <option value="fourmonthly">Four-monthly</option>
+            <option value="semiannual">Semiannual</option>
+            <option value="annual">Annual</option>
+          </select>
         </div>
 
-        {showAvailable && (
-          <AvailableFromWrapper $leaving={isLeaving}>
-            <label
-              style={{ fontSize: "11px", color: "#aaa", whiteSpace: "nowrap" }}
-            >
-              Available from day
-            </label>
-            <input
-              type="number"
-              min={1}
-              max={31}
-              value={availableFrom}
-              onChange={(e) => setAvailableFrom(parseInt(e.target.value) || 1)}
+        {showFrequencyExtras && (
+          <FrequencyExtrasWrapper $leaving={isLeavingExtras}>
+            <div
               style={{
-                width: "50px",
-                height: "35px",
-                borderRadius: "10px",
-                textAlign: "center",
-                border: "1px solid #4fffff",
-                backgroundColor: "transparent",
-                color: "#f0f0f0",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "4px",
               }}
-            />
-          </AvailableFromWrapper>
+            >
+              <label
+                style={{
+                  fontSize: "11px",
+                  color: "#aaa",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Start date
+              </label>
+              <input
+                type="date"
+                value={expenseStartDate}
+                onChange={(e) => setExpenseStartDate(e.target.value)}
+                style={{
+                  height: "35px",
+                  borderRadius: "10px",
+                  padding: "0 8px",
+                  border: "1px solid #4fffff",
+                  backgroundColor: "transparent",
+                  color: "#f0f0f0",
+                }}
+              />
+            </div>
+
+            {expenseFrequency === "biweekly" && (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+              >
+                <label
+                  style={{
+                    fontSize: "11px",
+                    color: "#aaa",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Second date
+                </label>
+                <input
+                  type="date"
+                  value={expenseStartDate2}
+                  onChange={(e) => setExpenseStartDate2(e.target.value)}
+                  style={{
+                    height: "35px",
+                    borderRadius: "10px",
+                    padding: "0 8px",
+                    border: "1px solid #4fffff",
+                    backgroundColor: "transparent",
+                    color: "#f0f0f0",
+                  }}
+                />
+              </div>
+            )}
+          </FrequencyExtrasWrapper>
         )}
 
         <button
@@ -863,6 +1049,7 @@ const PersonalFinance = () => {
         income={income}
         expenses={expenses}
         handleDelete={handleDelete}
+        handleTogglePaid={handleTogglePaid}
         moneyInHand={salaryData.moneyInHand}
         setMoneyInHand={setMoneyInHand}
         handleEdit={handleEdit}
