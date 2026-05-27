@@ -151,12 +151,13 @@ const refreshToken = (req, res) => {
 // @desc    Actualizar datos del usuario
 const updateUserData = async (req, res) => {
   try {
-    const { incomes, expenses, payInfo } = req.body;
+    const { incomes, expenses, payInfo, todos } = req.body;
 
     const updateFields = {};
     if (Array.isArray(incomes)) updateFields.incomes = incomes;
     if (Array.isArray(expenses)) updateFields.expenses = expenses;
     if (payInfo) updateFields.payInfo = payInfo;
+    if (Array.isArray(todos)) updateFields.todos = todos;
 
     const updatedUserDoc = await User.findByIdAndUpdate(
       req.user.id,

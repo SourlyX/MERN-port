@@ -4,14 +4,15 @@
  * Recibe el estado de los todos y su setter como props desde el componente padre.
  */
 
-import { useState } from 'react';
-import styled from 'styled-components';
+import { useState } from "react";
+import { updateUserData } from "../../api/users";
+import styled from "styled-components";
 
 /* ===================== Styled Components ===================== */
 
 /** Contenedor principal de la lista de tareas */
 const Container = styled.div`
-  background-color: #1E1E1E;
+  background-color: #1e1e1e;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -27,13 +28,13 @@ const Todo = styled.div`
   flex-direction: row;
   flex-wrap: nowrap;
   width: 100%;
-  border: 1px solid #3A3A3A;
+  border: 1px solid #3a3a3a;
   border-radius: 4px;
 `;
 
 /** Título principal del componente */
 const Title = styled.h2`
-  color: #55F5ED;
+  color: #55f5ed;
   margin-bottom: 30px;
 `;
 
@@ -43,7 +44,7 @@ const Text = styled.p`
   width: 90%;
   padding: 0 5px;
   text-align: center;
-  text-decoration: ${({ $active }) => (!$active ? 'line-through' : 'none')};
+  text-decoration: ${({ $active }) => (!$active ? "line-through" : "none")};
   color: #f5f5f5;
 `;
 
@@ -57,8 +58,8 @@ const NewTodo = styled.div`
 
 /** Botón para agregar una nueva tarea */
 const AddNew = styled.button`
-  background-color: #55F5ED;
-  color: #2C3E50;
+  background-color: #55f5ed;
+  color: #2c3e50;
   border: none;
   padding: 10px 20px;
   border-radius: 4px;
@@ -66,7 +67,7 @@ const AddNew = styled.button`
   margin-left: 10px;
 
   &:hover {
-    background-color: #4AE5E0;
+    background-color: #4ae5e0;
   }
 `;
 
@@ -97,37 +98,35 @@ const ToDoList = ({ todos, setTodos }) => {
    * Handler para alternar el estado activo/completado de una tarea.
    * @param {number} index - Índice de la tarea a alternar.
    */
-  const handleClick = (index) => {
-    setTodos((prevState) =>
-      prevState.map((todo, i) =>
-        i === index ? { ...todo, active: !todo.active } : todo
-      )
+  const handleClick = async (index) => {
+    const updated = todos.map((todo, i) =>
+      i === index ? { ...todo, active: !todo.active } : todo,
     );
+    setTodos(updated);
+    await updateUserData({ todos: updated });
   };
 
   /**
    * Agrega una nueva tarea a la lista.
    * No agrega tareas con texto vacío o solo espacios.
    */
-  const addTodo = () => {
+  const addTodo = async () => {
     if (newTodo.trim() === "") return;
 
-    const newTask = {
-      name: newTodo,
-      active: true,
-    };
-
-    setTodos([...todos, newTask]);
+    const updated = [...todos, { name: newTodo, active: true }];
+    setTodos(updated);
     setNewTodo("");
+    await updateUserData({ todos: updated });
   };
 
   /**
    * Elimina una tarea de la lista por su índice.
    * @param {number} index - Índice de la tarea a eliminar.
    */
-  const removeTodo = (index) => {
-    const updatedTodos = todos.filter((_, todoIndex) => todoIndex !== index);
-    setTodos(updatedTodos);
+  const removeTodo = async (index) => {
+    const updated = todos.filter((_, i) => i !== index);
+    setTodos(updated);
+    await updateUserData({ todos: updated });
   };
 
   /* ===================== Renderizado ===================== */
@@ -166,7 +165,7 @@ const ToDoList = ({ todos, setTodos }) => {
             style={{ height: "35px", borderRadius: "10px" }}
             value={newTodo}
             onChange={(e) => setNewTodo(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && addTodo()}
+            onKeyDown={(e) => e.key === "Enter" && addTodo()}
           />
           <AddNew onClick={addTodo}>Add To-Do</AddNew>
         </NewTodo>
