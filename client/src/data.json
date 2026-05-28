@@ -89,7 +89,7 @@
     },
     {
       "image": "images/projects/todo.png",
-      "title": "To-do list",
+      "title": "To-Do list",
       "description": "This project is a simple and functional To-Do List built with React. It allows users to create, edit, and delete tasks, offering a clean and intuitive interface for managing daily activities. The application stores tasks locally for now, ensuring usability even without backend integration. However, a connected version with a Node.js backend is currently under development to enable persistent storage and synchronization across devices. This project reflects my focus on dynamic front-end design and will soon evolve with full-stack functionality.",
       "url": "to-do-list",
       "inDevelopment": false

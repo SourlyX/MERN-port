@@ -36,16 +36,6 @@ function App() {
 
   const [toastVisibility, setToastVisibility] = useState(false)
   const [toastMessage, setToastMessage] = useState("")
-  const [todos, setTodos] = useState([
-    { name: "Something", active: true },
-    { name: "Something 2", active: true },
-    { name: "buy hotcakes", active: true },
-    { name: "Go to the supermarket", active: false },
-    { name: "Buy more hotcakes", active: false },
-    { name: "Fly like superman", active: false },
-    { name: "Buy some eggos", active: true },
-  ])
-
   return (
     <AuthProvider>
       <MainApp>
@@ -91,7 +81,7 @@ function App() {
             <Container cards={data.myProjects} text="Go to project" title="Projects" />
           } />
 
-          <Route path="/projects/to-do-list" element={<ToDoList todos={todos} setTodos={setTodos} />} />
+          <Route path="/projects/to-do-list" element={<ToDoList />} />
           <Route path="/projects/restaurant" element={<Restarurante />} />
           <Route path="/projects/pokedex" element={<Pokedex />} />
           <Route

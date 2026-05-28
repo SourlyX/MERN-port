@@ -15,8 +15,11 @@ body {
   }
 }
 
-html, body, #root {
+body {
   overflow-x: hidden;
+}
+
+#root {
   width: 100%;
   box-sizing: border-box;
 }
