@@ -231,58 +231,147 @@ const Tables = ({
                 {
                   return editingRow === target.type ? (
                     <TableRow key={target.type}>
-                      <TableCell>
-                        <input
-                          type="text"
-                          value={editValues.type}
-                          onChange={(e) =>
-                            setEditValues({
-                              ...editValues,
-                              type: e.target.value,
-                            })
-                          }
-                          onKeyDown={(e) =>
-                            e.key === "Enter" && handleConfirm(income)
-                          }
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <input
-                          type="number"
-                          value={editValues.amount}
-                          onChange={(e) =>
-                            setEditValues({
-                              ...editValues,
-                              amount: Number(e.target.value),
-                            })
-                          }
-                          onKeyDown={(e) =>
-                            e.key === "Enter" && handleConfirm(income)
-                          }
-                        />
-                        <button
-                          onClick={() => handleConfirm(income)}
+                      <TableCell colSpan={2}>
+                        <div
                           style={{
-                            backgroundColor: "#55F5ED",
-                            color: "#282C34",
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: "6px",
+                            alignItems: "center",
                           }}
                         >
-                          ✔
-                        </button>
-                        <button
-                          onClick={() => setEditingRow(null)}
-                          style={{
-                            backgroundColor: "#55F5ED",
-                            color: "#282C34",
-                          }}
-                        >
-                          ✗
-                        </button>
+                          <input
+                            type="text"
+                            value={editValues.type}
+                            onChange={(e) =>
+                              setEditValues({
+                                ...editValues,
+                                type: e.target.value,
+                              })
+                            }
+                            onKeyDown={(e) =>
+                              e.key === "Enter" && handleConfirm(income)
+                            }
+                            style={{ flex: "1", minWidth: "80px" }}
+                          />
+                          <input
+                            type="number"
+                            value={editValues.amount}
+                            onChange={(e) =>
+                              setEditValues({
+                                ...editValues,
+                                amount: Number(e.target.value),
+                              })
+                            }
+                            onKeyDown={(e) =>
+                              e.key === "Enter" && handleConfirm(income)
+                            }
+                            style={{ flex: "1", minWidth: "80px" }}
+                          />
+                          <select
+                            value={editValues.frequency || "none"}
+                            onChange={(e) =>
+                              setEditValues({
+                                ...editValues,
+                                frequency:
+                                  e.target.value === "none"
+                                    ? null
+                                    : e.target.value,
+                              })
+                            }
+                            style={{
+                              flex: "1",
+                              minWidth: "100px",
+                              height: "30px",
+                              borderRadius: "8px",
+                            }}
+                          >
+                            <option value="none">None</option>
+                            <option value="biweekly">Biweekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="fourmonthly">Four-monthly</option>
+                            <option value="semiannual">Semiannual</option>
+                            <option value="annual">Annual</option>
+                          </select>
+                          {editValues.frequency && (
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                gap: "4px",
+                              }}
+                            >
+                              <label
+                                style={{
+                                  fontSize: "11px",
+                                  color: "#aaa",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                Start day
+                              </label>
+                              <input
+                                type="number"
+                                min={1}
+                                max={31}
+                                value={editValues.startDay}
+                                onChange={(e) =>
+                                  setEditValues({
+                                    ...editValues,
+                                    startDay: parseInt(e.target.value) || 1,
+                                  })
+                                }
+                                style={{
+                                  width: "50px",
+                                  height: "30px",
+                                  borderRadius: "8px",
+                                  textAlign: "center",
+                                  border: "1px solid #4fffff",
+                                  backgroundColor: "transparent",
+                                  color: "#f0f0f0",
+                                }}
+                              />
+                            </div>
+                          )}
+                          <button
+                            onClick={() => handleConfirm(income)}
+                            style={{
+                              backgroundColor: "#55F5ED",
+                              color: "#282C34",
+                            }}
+                          >
+                            ✔
+                          </button>
+                          <button
+                            onClick={() => setEditingRow(null)}
+                            style={{
+                              backgroundColor: "#55F5ED",
+                              color: "#282C34",
+                            }}
+                          >
+                            ✗
+                          </button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ) : (
                     <TableRow key={target.type}>
-                      <TableCell>{target.type}</TableCell>
+                      <TableCell>
+                        {target.type}
+                        {target.frequency && (
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              marginLeft: "6px",
+                              color: "#aaa",
+                            }}
+                          >
+                            ({target.frequency})
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell
                         style={{
                           display: "flex",
@@ -307,7 +396,7 @@ const Tables = ({
                             ✏️
                           </Pencil>
                           <Bin
-                            src={`/productos/garbage.png`}
+                            src="/productos/garbage.png"
                             alt="Garbage Icon"
                             onClick={() => handleDelete(income, target)}
                           />
@@ -572,7 +661,7 @@ const Tables = ({
               <TableCell>Total</TableCell>
               <TableCell>
                 {"₡" +
-                  (income.at(-1).amount - expenses.at(-1).amount).toString()}
+                  (income.at(-1).amount - expenses.at(-1).amount).toFixed(2).toString()}
               </TableCell>
             </TableRow>
             <TableRow>
@@ -595,7 +684,7 @@ const Tables = ({
                     income.at(-1).amount -
                     expenses.at(-1).amount +
                     moneyInHand
-                  ).toString()}
+                  ).toFixed(2).toString()}
               </TableCell>
             </TableRow>
           </tbody>

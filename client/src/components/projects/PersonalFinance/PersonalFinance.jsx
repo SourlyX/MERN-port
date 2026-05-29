@@ -199,6 +199,11 @@ const PersonalFinance = () => {
   const [expenseStartDate, setExpenseStartDate] = useState("");
   const [expenseStartDate2, setExpenseStartDate2] = useState("");
   const [showFrequencyExtras, setShowFrequencyExtras] = useState(false);
+  const [incomeFrequency, setIncomeFrequency] = useState(null);
+  const [incomeStartDate, setIncomeStartDate] = useState("");
+  const [showFrequencyExtrasIncome, setShowFrequencyExtrasIncome] =
+    useState(false);
+  const [isLeavingExtrasIncome, setIsLeavingExtrasIncome] = useState(false);
   const [isLeavingExtras, setIsLeavingExtras] = useState(false);
   const [showAvailable, setShowAvailable] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
@@ -567,20 +572,30 @@ const PersonalFinance = () => {
 
       // 6. Múltiples períodos
     } else {
-      const baseExpenses = user.expenses?.slice(0, -1) || [];
+      const baseIncomes = user.incomes?.slice(0, -1) || [];
 
+      const recurringIncomes = baseIncomes.filter((i) => i.frequency);
+
+      const recurringTotal = recurringIncomes.reduce(
+        (sum, i) => sum + i.amount,
+        0,
+      );
+
+      const nextIncome = [
+        { type: "Net Salary", amount: 0 },
+        ...recurringIncomes,
+        { type: "Total", amount: recurringTotal },
+      ];
+
+      const baseExpenses = user.expenses?.slice(0, -1) || [];
       const nextExpenses = baseExpenses
         .filter((e) => e.frequency)
-        .map((e) => ({
-          ...e,
-          paid: false,
-          carriedOver: !e.paid,
-        }));
+        .map((e) => ({ ...e, paid: false, carriedOver: !e.paid }));
 
       const finalExpenses = [...nextExpenses, { type: "Total", amount: 0 }];
 
       await updateUserData({
-        incomes: defaultIncome,
+        incomes: nextIncome,
         expenses: finalExpenses,
         payInfo: {
           ...user.payInfo,
@@ -593,7 +608,7 @@ const PersonalFinance = () => {
       })
         .then((updatedUser) => {
           updateUser(updatedUser);
-          setIncome(defaultIncome);
+          setIncome(nextIncome);
           setExpenses(finalExpenses);
           setSalaryData((prev) => ({
             ...prev,
@@ -641,10 +656,27 @@ const PersonalFinance = () => {
       alert("Please input an income type");
       return;
     }
+    if (incomeFrequency && !incomeStartDate) {
+      alert("Please select a start date");
+      return;
+    }
+
+    let appearsFrom = null;
+    if (incomeFrequency) {
+      const start = new Date(incomeStartDate);
+      const months = anticipationMonths[incomeFrequency] || 0;
+      appearsFrom = new Date(
+        start.getFullYear(),
+        start.getMonth() - months,
+        1,
+      ).toISOString();
+    }
 
     const newIncomeObject = {
       type: incomeType,
       amount: parseFloat(newIncome),
+      frequency: incomeFrequency || null,
+      appearsFrom,
     };
 
     const currentIncomes = income.slice(0, -1);
@@ -658,6 +690,9 @@ const PersonalFinance = () => {
     setIncome([...updatedIncomes, newTotal]);
     setNewIncome("");
     setIncomeType("");
+    setIncomeFrequency(null);
+    setIncomeStartDate("");
+    setShowFrequencyExtrasIncome(false);
   };
 
   const anticipationMonths = {
@@ -831,6 +866,26 @@ const PersonalFinance = () => {
       setExpenses([...currentType, newTotalObject]);
   };
 
+  /** Maneja el cambio de frecuencia para un ingreso recurrente, mostrando u ocultando el campo adicional
+   * de fecha de inicio según corresponda, y reseteando la fecha al ocultar.
+   * @param {string} value - Nueva frecuencia seleccionada (o "none" para eliminar la frecuencia)
+   * */
+  const handleIncomeFrequencyChange = (value) => {
+    const freq = value === "none" ? null : value;
+    setIncomeFrequency(freq);
+    if (freq) {
+      setShowFrequencyExtrasIncome(true);
+      setIsLeavingExtrasIncome(false);
+    } else {
+      setIsLeavingExtrasIncome(true);
+      setTimeout(() => {
+        setShowFrequencyExtrasIncome(false);
+        setIsLeavingExtrasIncome(false);
+        setIncomeStartDate("");
+      }, 300);
+    }
+  };
+
   /** Maneja el cambio de frecuencia para un gasto recurrente, mostrando u ocultando los campos
    * adicionales de fecha de inicio según corresponda, y reseteando las fechas al ocultar.
    * @param {string} value - Nueva frecuencia seleccionada (o "none" para eliminar la frecuencia)
@@ -862,15 +917,85 @@ const PersonalFinance = () => {
           value={incomeType}
           placeholder="Type of income"
           onChange={(e) => setIncomeType(e.target.value)}
-        ></Input>
+        />
         <Input
           type="number"
           placeholder="Income amount"
           style={{ height: "35px", borderRadius: "10px", maxWidth: "90%" }}
           value={newIncome}
           onChange={(e) => setNewIncome(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addIncome(newIncome)}
+          onKeyDown={(e) => e.key === "Enter" && addIncome()}
         />
+
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "4px",
+          }}
+        >
+          <label style={{ fontSize: "11px", color: "#aaa" }}>Frequency</label>
+          <select
+            value={incomeFrequency || "none"}
+            onChange={(e) => handleIncomeFrequencyChange(e.target.value)}
+            style={{
+              height: "35px",
+              borderRadius: "10px",
+              padding: "0 8px",
+              backgroundColor: incomeFrequency ? "#55F5ED" : "#383838",
+              color: incomeFrequency ? "#282C34" : "#f0f0f0",
+              border: "1px solid #4fffff",
+              cursor: "pointer",
+              transition: "background-color 300ms ease, color 300ms ease",
+            }}
+          >
+            <option value="none">None</option>
+            <option value="biweekly">Biweekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="quarterly">Quarterly</option>
+            <option value="fourmonthly">Four-monthly</option>
+            <option value="semiannual">Semiannual</option>
+            <option value="annual">Annual</option>
+          </select>
+        </div>
+
+        {showFrequencyExtrasIncome && (
+          <FrequencyExtrasWrapper $leaving={isLeavingExtrasIncome}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "4px",
+              }}
+            >
+              <label
+                style={{
+                  fontSize: "11px",
+                  color: "#aaa",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Start date
+              </label>
+              <input
+                type="date"
+                value={incomeStartDate}
+                onChange={(e) => setIncomeStartDate(e.target.value)}
+                style={{
+                  height: "35px",
+                  borderRadius: "10px",
+                  padding: "0 8px",
+                  border: "1px solid #4fffff",
+                  backgroundColor: "transparent",
+                  color: "#f0f0f0",
+                }}
+              />
+            </div>
+          </FrequencyExtrasWrapper>
+        )}
+
         <button
           style={{
             height: "35px",
