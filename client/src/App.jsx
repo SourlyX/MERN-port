@@ -1,41 +1,41 @@
-import { useRef, useState } from "react"
-import { AuthProvider } from './context/AuthContext'
-import Navbar from "./components/Navbar"
-import Container from "./components/projects/Container"
-import Footer from "./components/Footer"
-import styled from "styled-components"
-import About from "./components/routes/About"
-import Contact from "./components/Contact"
-import PageNotFound from "./components/routes/NotFound"
-import LandingPage from "./components/routes/LandingPage"
-import ScrollToTop from "./components/ScrollToTop"
-import ToDoList from "./components/projects/ToDoList"
-import Restarurante from "./components/routes/restaurant/Restaurante"
-import Pokedex from "./components/projects/pokeapi/Pokedex"
-import PersonalFinance from "./components/projects/PersonalFinance/PersonalFinance"
-import Login from "./components/routes/Login"
-import Register from "./components/routes/Register"
-import data from "./data.json"
-import RedirectIfAuth from "./components/routes/RedirectIfAuth"
-import Toast from "./components/Toast"
-import RouteScrollToTop from "./components/RouteScrollToTop"
-import "./index.css"
-import { HelmetProvider } from "react-helmet-async"
-import { Routes, Route } from "react-router-dom"
+import { useRef, useState } from "react";
+import { AuthProvider } from "./context/AuthContext";
+import Navbar from "./components/Navbar";
+import Container from "./components/projects/Container";
+import Footer from "./components/Footer";
+import About from "./components/routes/About";
+import Contact from "./components/Contact";
+import PageNotFound from "./components/routes/NotFound";
+import LandingPage from "./components/routes/LandingPage";
+import ScrollToTop from "./components/ScrollToTop";
+import ToDoList from "./components/projects/ToDoList";
+import Restarurante from "./components/routes/restaurant/Restaurante";
+import Pokedex from "./components/projects/pokeapi/Pokedex";
+import PersonalFinance from "./components/projects/PersonalFinance/PersonalFinance";
+import Login from "./components/routes/Login";
+import Register from "./components/routes/Register";
+import data from "./data.json";
+import RedirectIfAuth from "./components/routes/RedirectIfAuth";
+import Toast from "./components/Toast";
+import RouteScrollToTop from "./components/RouteScrollToTop";
+import styled from "styled-components";
+import "./index.css";
+import { HelmetProvider } from "react-helmet-async";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 const MainApp = styled.div`
-  color: #E0E0E0;
-  background-color: #282C34;
+  color: #e0e0e0;
+  background-color: #282c34;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-`
+`;
 
 function App() {
-  const contactRef = useRef(null)
+  const contactRef = useRef(null);
 
-  const [toastVisibility, setToastVisibility] = useState(false)
-  const [toastMessage, setToastMessage] = useState("")
+  const [toastVisibility, setToastVisibility] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
   return (
     <AuthProvider>
       <MainApp>
@@ -54,10 +54,12 @@ function App() {
 
         <RouteScrollToTop />
 
-        <Navbar items={data.navbarItems}
+        <Navbar
+          items={data.navbarItems}
           contactRef={contactRef}
           toastVisibility={setToastVisibility}
-          setMessage={setToastMessage} />
+          setMessage={setToastMessage}
+        />
         <ScrollToTop />
 
         <Routes>
@@ -67,7 +69,11 @@ function App() {
               <>
                 <LandingPage />
                 {data.myProjects && (
-                  <Container cards={data.myProjects.slice(0, 2)} title="Main Projects" />
+                  <Container
+                    cards={data.myProjects.slice(0, 2)}
+                    text="Go to project"
+                    title="Main Projects"
+                  />
                 )}
                 {data.techskills?.length > 0 && (
                   <Container cards={data.techskills} title="Technical Skills" />
@@ -80,9 +86,16 @@ function App() {
           />
 
           <Route path="/about" element={<About />} />
-          <Route path="/projects/*" element={
-            <Container cards={data.myProjects} text="Go to project" title="Projects" />
-          } />
+          <Route
+            path="/projects/*"
+            element={
+              <Container
+                cards={data.myProjects}
+                text="Go to project"
+                title="Projects"
+              />
+            }
+          />
 
           <Route path="/projects/to-do-list" element={<ToDoList />} />
           <Route path="/projects/restaurant" element={<Restarurante />} />
@@ -91,33 +104,58 @@ function App() {
             path="/projects/incomes&expenses"
             element={<PersonalFinance />}
           />
+          <Route
+            path="/incomes&expenses"
+            element={<Navigate to="/projects/incomes&expenses" replace />}
+          />
 
-          <Route path="/login" element={<RedirectIfAuth>
-            <Login toastVisibility={setToastVisibility}
-              setMessage={setToastMessage} /> </RedirectIfAuth>} />
-          <Route path="/register" element={<RedirectIfAuth>
-            <Register toastVisibility={setToastVisibility}
-              setMessage={setToastMessage} />
-          </RedirectIfAuth>} />
+          <Route
+            path="/login"
+            element={
+              <RedirectIfAuth>
+                <Login
+                  toastVisibility={setToastVisibility}
+                  setMessage={setToastMessage}
+                />{" "}
+              </RedirectIfAuth>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <RedirectIfAuth>
+                <Register
+                  toastVisibility={setToastVisibility}
+                  setMessage={setToastMessage}
+                />
+              </RedirectIfAuth>
+            }
+          />
 
           <Route path="*" element={<PageNotFound />} />
         </Routes>
 
-        <Contact ref={contactRef}
+        <Contact
+          ref={contactRef}
           toastVisibility={setToastVisibility}
-          setMessage={setToastMessage} />
+          setMessage={setToastMessage}
+        />
 
-        {toastVisibility ? <Toast setVisibility={setToastVisibility} message={toastMessage} /> : null}
+        {toastVisibility ? (
+          <Toast setVisibility={setToastVisibility} message={toastMessage} />
+        ) : null}
         <Footer />
       </MainApp>
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;
 
-{/*
+{
+  /*
   Crear twitter de programador
   Proyectos (descripcion, imagen, tecnologias, código)
   Categorizar habilidades tecnicas (front/back/...)
-*/}
+*/
+}
