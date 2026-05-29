@@ -18,12 +18,18 @@ const Title = styled.h1`
 
 /** Contenedor flex que organiza las tarjetas de Pokémon */
 const Container = styled.div`
-  background-color: #1F1F1F;
+  background-color: #1f1f1f;
   display: flex;
   flex-wrap: wrap;
   width: 95%;
   justify-content: center;
 `;
+
+/** Función auxiliar para dividir un array en chunks de tamaño específico  y no saturar el navegador */
+const chunk = (arr, size) =>
+  Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
+    arr.slice(i * size, i * size + size),
+  );
 
 /**
  * CardContainer
@@ -47,31 +53,45 @@ function CardContainer({ pokemons }) {
     const fetchPokemonData = async () => {
       try {
         // Obtener los detalles de todos los Pokémon en paralelo
-        const detailedDataPromises = pokemons.map(async (pokemon) => {
-          const response = await Axios.get(pokemon.url);
-          return { ...response.data };
-        });
+        const detailedData = [];
+        for (const batch of chunk(pokemons, 20)) {
+          const batchResults = await Promise.all(
+            batch.map((p) => Axios.get(p.url)),
+          );
+          const batchData = batchResults.map((r) => r.data);
+          detailedData.push(...batchData);
 
-        const detailedData = await Promise.all(detailedDataPromises);
+          const batchCards = batchData.map((pokemon) => (
+            <Card key={pokemon.id} pokemon={pokemon} />
+          ));
+
+          setCards((prev) => [...prev, ...batchCards]);
+        }
 
         // Eliminar duplicados basándose en el game_index y ordenar ascendentemente
-        const uniquePokemons = detailedData.filter((pokemon, index, self) => {
-          const gameIndex = pokemon.game_indices[3]?.game_index || 0;
-          return (
-            self.findIndex(p => (p.game_indices[3]?.game_index || 0) === gameIndex) === index
-          );
-        }).sort((a, b) => {
-          const indexA = a.game_indices[3]?.game_index || 0;
-          const indexB = b.game_indices[3]?.game_index || 0;
-          return indexA - indexB;
-        });
+        const uniquePokemons = detailedData
+          .filter((pokemon, index, self) => {
+            const gameIndex = pokemon.game_indices[3]?.game_index || 0;
+            return (
+              self.findIndex(
+                (p) => (p.game_indices[3]?.game_index || 0) === gameIndex,
+              ) === index
+            );
+          })
+          .sort((a, b) => {
+            const indexA = a.game_indices[3]?.game_index || 0;
+            const indexB = b.game_indices[3]?.game_index || 0;
+            return indexA - indexB;
+          });
 
         setDetailedPokemons(uniquePokemons);
 
         // Obtener las cadenas de evolución para cada Pokémon único
         const chainPromises = uniquePokemons.map(async (pokemon) => {
           const speciesResponse = await Axios.get(pokemon.species.url);
-          const chainsResponse = await Axios.get(speciesResponse.data.evolution_chain.url);
+          const chainsResponse = await Axios.get(
+            speciesResponse.data.evolution_chain.url,
+          );
           return chainsResponse.data;
         });
 
@@ -79,31 +99,38 @@ function CardContainer({ pokemons }) {
 
         // Filtrar cadenas únicas basándose en el nombre de la especie raíz
         const uniqueChains = chains.filter((chain, index, self) => {
-          return self.findIndex(c => c.chain.species.name === chain.chain.species.name) === index;
+          return (
+            self.findIndex(
+              (c) => c.chain.species.name === chain.chain.species.name,
+            ) === index
+          );
         });
 
         setChain(uniqueChains);
 
         // Generar componentes Card para cada Pokémon con su cadena de evolución
-        const pokemonWithCards = uniquePokemons.map(pokemon => {
+        const pokemonWithCards = uniquePokemons.map((pokemon) => {
           const chainData = hasChain(pokemon.name, uniqueChains);
 
           // Filtrar Pokémon relacionados que pertenecen a la misma cadena evolutiva
-          const relatedPokemons = uniquePokemons.filter(p => {
+          const relatedPokemons = uniquePokemons.filter((p) => {
             return isPartOfChain(p.name, chainData);
           });
 
           // Generar tarjetas para los Pokémon relacionados
-          const relatedCards = relatedPokemons.map(p => (
-            <Card key={p.id} pokemon={p}/>
+          const relatedCards = relatedPokemons.map((p) => (
+            <Card key={p.id} pokemon={p} />
           ));
 
           return (
-            <Card key={pokemon.id} pokemon={pokemon} evolutionChain={chainData} pokemonEvolutions={relatedCards} />
+            <Card
+              key={pokemon.id}
+              pokemon={pokemon}
+              evolutionChain={chainData}
+              pokemonEvolutions={relatedCards}
+            />
           );
         });
-
-        setCards(pokemonWithCards);
       } catch (error) {
         console.error("Error fetching Pokémon data:", error);
       }
@@ -152,7 +179,9 @@ function CardContainer({ pokemons }) {
       if (!currentChain) return false;
       if (currentChain.species?.name === pokemonName) return true;
 
-      return currentChain.evolves_to.some(evolution => traverseChain(evolution));
+      return currentChain.evolves_to.some((evolution) =>
+        traverseChain(evolution),
+      );
     };
 
     return traverseChain(chainData.chain);
@@ -162,9 +191,7 @@ function CardContainer({ pokemons }) {
   return (
     <>
       <Title>Pokedex</Title>
-      <Container>
-        {cards}
-      </Container>
+      <Container>{cards}</Container>
     </>
   );
 }

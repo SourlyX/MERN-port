@@ -90,6 +90,7 @@ function Card({ pokemon, evolutionChain, pokemonEvolutions }) {
    * @returns {Array} Copia de pokemonEvolutions con la propiedad `lvl` asignada.
    */
   const calculateEvolutionsWithLevels = () => {
+    if (!pokemonEvolutions || !evolutionChain) return [];
     // Crea una copia de pokemonEvolutions para asignar niveles
     const evolutionsWithLevels = pokemonEvolutions.map((evolution) => ({
       ...evolution,
