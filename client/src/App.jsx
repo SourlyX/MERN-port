@@ -66,6 +66,9 @@ function App() {
             element={
               <>
                 <LandingPage />
+                {data.myProjects && (
+                  <Container cards={data.myProjects.slice(0, 2)} title="Main Projects" />
+                )}
                 {data.techskills?.length > 0 && (
                   <Container cards={data.techskills} title="Technical Skills" />
                 )}
@@ -116,6 +119,5 @@ export default App
 {/*
   Crear twitter de programador
   Proyectos (descripcion, imagen, tecnologias, código)
-  Poner pocos proyectos en la pagina de home
   Categorizar habilidades tecnicas (front/back/...)
 */}
