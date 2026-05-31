@@ -70,14 +70,14 @@
       "image": "images/projects/personalFinanceManager.png",
       "title": "Personal Finance Manager",
       "description": "A full-featured personal finance application that tracks income, expenses, and real-time balance reconciliation. Users log their salary, adjust for actual bank balance discrepancies via a money in hand field, and categorize expenses by amount and date with all totals and balances updating dynamically as data changes. The app calculates the final balance accounting for the difference between expected and actual income. Recurring income sources and payments are coming soon. Built with React, showcasing complex state management, dynamic calculations, and financial data integrity.",
-      "url": "incomes&expenses",
+      "url": "personal-finance",
       "inDevelopment": false
     },
     {
       "image": "images/projects/development.jpeg",
       "title": "Alert Triage Dashboard",
       "description": "A real-time fraud monitoring dashboard that simulates live transaction activity by writing a new entry to the database every minute. Each transaction gets scored automatically using a multi-factor rule engine: velocity checks, high amounts, geographic anomalies, new device detection, and unusual hours. The 'unusual hour' flag is evaluated against the local time of the transaction's country, not the analyst's, which makes it actually meaningful. Scores are capped at 100, and anything above 30 triggers an alert that gets persisted to the database. Cross-border activity is tracked separately through country exit notices. Built with the MERN stack. Currently in development.",
-      "url": "recetas",
+      "url": "alert-triage-dashboard",
       "inDevelopment": true
     },
     {

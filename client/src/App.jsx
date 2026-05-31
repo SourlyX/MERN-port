@@ -101,12 +101,12 @@ function App() {
           <Route path="/projects/restaurant" element={<Restarurante />} />
           <Route path="/projects/pokedex" element={<Pokedex />} />
           <Route
-            path="/projects/incomes&expenses"
+            path="/projects/personal-finance"
             element={<PersonalFinance />}
           />
           <Route
             path="/incomes&expenses"
-            element={<Navigate to="/projects/incomes&expenses" replace />}
+            element={<Navigate to="/projects/personal-finance" replace />}
           />
 
           <Route
