@@ -230,6 +230,13 @@ const PersonalFinance = () => {
   /** Almacena la clave del último período guardado para evitar guardados duplicados */
   const lastSavedPeriodStart = useRef(null);
 
+/* -------------------- getToday -------------------- */
+  // 🧪 TEST: cambia esta fecha para simular días futuros. En prod: new Date()
+const getToday = () => {
+  // return new Date("2025-07-01");
+  return new Date();
+};
+
   /* -------------------- Helpers -------------------- */
 
   /**
