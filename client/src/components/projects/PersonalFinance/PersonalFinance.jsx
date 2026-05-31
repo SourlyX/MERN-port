@@ -300,6 +300,28 @@ const PersonalFinance = () => {
       });
     }
     checkPeriodChange(user);
+
+    const loadedIncomes =
+      user.incomes && user.incomes.length > 0 ? user.incomes : defaultIncome;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const { income: autoChecked, changed } = applyAutoCheck(
+      loadedIncomes,
+      today,
+    );
+
+    if (changed) {
+      setIncome(autoChecked);
+      updateUserData({
+        incomes: autoChecked,
+        expenses: user.expenses,
+        payInfo: { ...user.payInfo },
+      })
+        .then((updatedUser) => updateUser(updatedUser))
+        .catch(console.error);
+    }
   }, [isAuthenticated, user]);
 
   /**
@@ -567,6 +589,27 @@ const PersonalFinance = () => {
             lastPayDate: lastCutDate.toISOString(),
             lastOpened: today.toISOString(),
           }));
+          const { income: autoChecked, changed } = applyAutoCheck(
+            updatedIncome,
+            today,
+          );
+          if (changed) {
+            setIncome(autoChecked);
+            updateUserData({
+              incomes: autoChecked,
+              expenses: user.expenses,
+              payInfo: {
+                ...user.payInfo,
+                vto: "",
+                ot: "",
+                moneyInHand: realBalance,
+                lastPayDate: lastCutDate.toISOString(),
+                lastOpened: today.toISOString(),
+              },
+            })
+              .then((u) => updateUser(u))
+              .catch(console.error);
+          }
         })
         .catch(console.error);
 
@@ -574,24 +617,33 @@ const PersonalFinance = () => {
     } else {
       const baseIncomes = user.incomes?.slice(0, -1) || [];
 
-      const recurringIncomes = baseIncomes.filter((i) => i.frequency);
+      const unpaidRecurring = baseIncomes
+        .filter((i) => i.frequency && !i.paid)
+        .map((i) => ({ ...i, carriedOver: true }));
 
-      const recurringTotal = recurringIncomes.reduce(
-        (sum, i) => sum + i.amount,
-        0,
-      );
+      const freshRecurring = baseIncomes
+        .filter((i) => i.frequency && i.paid)
+        .map((i) => ({
+          ...i,
+          paid: false,
+          carriedOver: false,
+          instanceId:
+            Date.now().toString() + Math.random().toString(36).slice(2),
+        }));
 
-      const nextIncome = [
+      const preAutoCheck = [
         { type: "Net Salary", amount: 0 },
-        ...recurringIncomes,
-        { type: "Total", amount: recurringTotal },
+        ...unpaidRecurring,
+        ...freshRecurring,
+        { type: "Total", amount: 0 },
       ];
+
+      const { income: nextIncome } = applyAutoCheck(preAutoCheck, today);
 
       const baseExpenses = user.expenses?.slice(0, -1) || [];
       const nextExpenses = baseExpenses
         .filter((e) => e.frequency)
         .map((e) => ({ ...e, paid: false, carriedOver: !e.paid }));
-
       const finalExpenses = [...nextExpenses, { type: "Total", amount: 0 }];
 
       await updateUserData({
@@ -677,17 +729,25 @@ const PersonalFinance = () => {
       amount: parseFloat(newIncome),
       frequency: incomeFrequency || null,
       appearsFrom,
+      ...(incomeFrequency && {
+        paid: false,
+        carriedOver: false,
+        instanceId: Date.now().toString(),
+      }),
     };
 
     const currentIncomes = income.slice(0, -1);
     const oldTotal = income.at(-1);
-    const updatedIncomes = [...currentIncomes, newIncomeObject];
-    const newTotal = {
-      type: "Total",
-      amount: oldTotal.amount + newIncomeObject.amount,
-    };
+    const addsToTotal = !incomeFrequency;
 
-    setIncome([...updatedIncomes, newTotal]);
+    setIncome([
+      ...currentIncomes,
+      newIncomeObject,
+      {
+        type: "Total",
+        amount: oldTotal.amount + (addsToTotal ? newIncomeObject.amount : 0),
+      },
+    ]);
     setNewIncome("");
     setIncomeType("");
     setIncomeFrequency(null);
@@ -695,6 +755,7 @@ const PersonalFinance = () => {
     setShowFrequencyExtrasIncome(false);
   };
 
+  /* Mapeo de frecuencias a meses de anticipación para calcular la fecha "appearsFrom" al agregar ingresos/gastos recurrentes */
   const anticipationMonths = {
     biweekly: 0,
     monthly: 0,
@@ -703,6 +764,89 @@ const PersonalFinance = () => {
     semiannual: 2,
     annual: 3,
   };
+
+  /* Revisa los ingresos con frecuencia para marcar como pagados los que ya deberían
+  aparecer según su fecha "appearsFrom", y recalcula el total considerando solo
+  los ingresos sin frecuencia o los recurrentes que ya aparecieron. */
+  const applyAutoCheck = (incomeArray, today) => {
+    let changed = false;
+
+    const currentItems = incomeArray.slice(0, -1);
+    const updated = currentItems.map((item) => {
+      if (
+        item.frequency &&
+        !item.paid &&
+        !item.carriedOver &&
+        item.appearsFrom &&
+        new Date(item.appearsFrom) <= today
+      ) {
+        changed = true;
+        return { ...item, paid: true };
+      }
+      return item;
+    });
+
+    if (!changed) return { income: incomeArray, changed: false };
+
+    const newTotal = updated.reduce((sum, item) => {
+      if (!item.frequency || item.paid) return sum + item.amount;
+      return sum;
+    }, 0);
+
+    return {
+      income: [...updated, { type: "Total", amount: newTotal }],
+      changed: true,
+    };
+  };
+
+  /* Permite al usuario marcar manualmente como pagado un ingreso recurrente que ya apareció,
+    o revertirlo a no pagado (con opción de marcar como "carried over" si se paga fuera de tiempo). */
+  const handleTogglePaidIncome = (instanceId) => {
+    const currentIncomes = income.slice(0, -1);
+    const currentTotal = income.at(-1).amount;
+    const target = currentIncomes.find((i) => i.instanceId === instanceId);
+    if (!target) return;
+
+    if (!target.paid && target.carriedOver) {
+      const confirmed = window.confirm(
+        `Mark "${target.type}" as paid? It will be removed from the list.`,
+      );
+      if (!confirmed) return;
+      const filtered = currentIncomes.filter(
+        (i) => i.instanceId !== instanceId,
+      );
+      setIncome([
+        ...filtered,
+        { type: "Total", amount: currentTotal + target.amount },
+      ]);
+    } else if (!target.paid) {
+      const updated = currentIncomes.map((i) =>
+        i.instanceId === instanceId ? { ...i, paid: true } : i,
+      );
+      setIncome([
+        ...updated,
+        { type: "Total", amount: currentTotal + target.amount },
+      ]);
+    } else {
+      const updated = currentIncomes.map((i) =>
+        i.instanceId === instanceId
+          ? { ...i, paid: false, carriedOver: true }
+          : i,
+      );
+      setIncome([
+        ...updated,
+        { type: "Total", amount: currentTotal - target.amount },
+      ]);
+    }
+  };
+
+  /**
+   * Actualiza el dinero disponible en mano/banco dentro de salaryData
+   * sin pisar el resto de los campos del estado.
+   * @param {number} value - Nuevo monto de dinero en mano
+   */
+  const setMoneyInHand = (value) =>
+    setSalaryData((prev) => ({ ...prev, moneyInHand: value }));
 
   /**
    * Agrega un nuevo gasto a la lista, validando que se haya ingresado un monto,
@@ -770,14 +914,6 @@ const PersonalFinance = () => {
     setExpenseStartDate2("");
     setShowFrequencyExtras(false);
   };
-
-  /**
-   * Actualiza el dinero disponible en mano/banco dentro de salaryData
-   * sin pisar el resto de los campos del estado.
-   * @param {number} value - Nuevo monto de dinero en mano
-   */
-  const setMoneyInHand = (value) =>
-    setSalaryData((prev) => ({ ...prev, moneyInHand: value }));
 
   /**
    * Elimina un ingreso o gasto de la lista correspondiente y recalcula el total automáticamente.
@@ -1175,6 +1311,7 @@ const PersonalFinance = () => {
         expenses={expenses}
         handleDelete={handleDelete}
         handleTogglePaid={handleTogglePaid}
+        handleTogglePaidIncome={handleTogglePaidIncome}
         moneyInHand={salaryData.moneyInHand}
         setMoneyInHand={setMoneyInHand}
         handleEdit={handleEdit}
@@ -1185,5 +1322,4 @@ const PersonalFinance = () => {
     </Container>
   );
 };
-
 export default PersonalFinance;

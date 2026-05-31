@@ -54,6 +54,10 @@ const transactionSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  instanceId: {
+    type: String,
+    default: null,
+  },
 });
 
 // 2. Esquema para las Tareas (Todos)

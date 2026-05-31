@@ -115,6 +115,7 @@ const Tables = ({
   expenses,
   handleDelete,
   handleTogglePaid,
+  handleTogglePaidIncome,
   moneyInHand,
   setMoneyInHand,
   handleEdit,
@@ -229,8 +230,9 @@ const Tables = ({
 
                 /* Fila genérica de ingreso con opción de eliminar */
                 {
-                  return editingRow === target.type ? (
-                    <TableRow key={target.type}>
+                  const key = target.instanceId || target.type;
+                  return editingRow === key ? (
+                    <TableRow key={key}>
                       <TableCell colSpan={2}>
                         <div
                           style={{
@@ -357,20 +359,48 @@ const Tables = ({
                       </TableCell>
                     </TableRow>
                   ) : (
-                    <TableRow key={target.type}>
+                    <TableRow key={key}>
                       <TableCell>
-                        {target.type}
-                        {target.frequency && (
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          {target.frequency && (
+                            <input
+                              type="checkbox"
+                              checked={!!target.paid}
+                              onChange={() =>
+                                handleTogglePaidIncome(target.instanceId)
+                              }
+                              style={{ cursor: "pointer" }}
+                            />
+                          )}
                           <span
                             style={{
-                              fontSize: "11px",
-                              marginLeft: "6px",
-                              color: "#aaa",
+                              color:
+                                target.frequency && !target.paid
+                                  ? "#9e9e9e"
+                                  : "#f0f0f0",
                             }}
                           >
-                            ({target.frequency})
+                            {target.carriedOver && "⚠️ "}
+                            {target.type}
+                            {target.frequency && (
+                              <span
+                                style={{
+                                  fontSize: "11px",
+                                  marginLeft: "6px",
+                                  color: "#aaa",
+                                }}
+                              >
+                                ({target.frequency})
+                              </span>
+                            )}
                           </span>
-                        )}
+                        </div>
                       </TableCell>
                       <TableCell
                         style={{
@@ -380,11 +410,20 @@ const Tables = ({
                           alignItems: "center",
                         }}
                       >
-                        {"₡" + target.amount}
+                        <span
+                          style={{
+                            color:
+                              target.frequency && !target.paid
+                                ? "#9e9e9e"
+                                : "#f0f0f0",
+                          }}
+                        >
+                          {"₡" + target.amount}
+                        </span>
                         <div style={{ display: "flex", gap: "6px" }}>
                           <Pencil
                             onClick={() => {
-                              setEditingRow(target.type);
+                              setEditingRow(key);
                               setEditValues({
                                 type: target.type,
                                 amount: target.amount,
@@ -661,7 +700,9 @@ const Tables = ({
               <TableCell>Total</TableCell>
               <TableCell>
                 {"₡" +
-                  (income.at(-1).amount - expenses.at(-1).amount).toFixed(2).toString()}
+                  (income.at(-1).amount - expenses.at(-1).amount)
+                    .toFixed(2)
+                    .toString()}
               </TableCell>
             </TableRow>
             <TableRow>
@@ -680,11 +721,9 @@ const Tables = ({
               </TableCell>
               <TableCell style={{ color: "white", background: "#4CAF50" }}>
                 {"₡" +
-                  (
-                    income.at(-1).amount -
-                    expenses.at(-1).amount +
-                    moneyInHand
-                  ).toFixed(2).toString()}
+                  (income.at(-1).amount - expenses.at(-1).amount + moneyInHand)
+                    .toFixed(2)
+                    .toString()}
               </TableCell>
             </TableRow>
           </tbody>
