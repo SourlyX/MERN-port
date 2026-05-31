@@ -230,12 +230,12 @@ const PersonalFinance = () => {
   /** Almacena la clave del último período guardado para evitar guardados duplicados */
   const lastSavedPeriodStart = useRef(null);
 
-/* -------------------- getToday -------------------- */
+  /* -------------------- getToday -------------------- */
   // 🧪 TEST: cambia esta fecha para simular días futuros. En prod: new Date()
-const getToday = () => {
-  // return new Date("2025-07-01");
-  return new Date();
-};
+  const getToday = () => {
+    // return new Date("2025-07-01");
+    return new Date();
+  };
 
   /* -------------------- Helpers -------------------- */
 
@@ -311,7 +311,7 @@ const getToday = () => {
     const loadedIncomes =
       user.incomes && user.incomes.length > 0 ? user.incomes : defaultIncome;
 
-    const today = new Date();
+    const today = getToday();
     today.setHours(0, 0, 0, 0);
 
     const { income: autoChecked, changed } = applyAutoCheck(
@@ -430,7 +430,7 @@ const getToday = () => {
    * @param {Object} user - Objeto del usuario autenticado con su información financiera.
    */
   const checkPeriodChange = async (user) => {
-    const today = new Date();
+    const today = getToday();
     today.setHours(0, 0, 0, 0);
 
     // 1. Primera apertura
@@ -815,18 +815,33 @@ const getToday = () => {
     if (!target) return;
 
     if (!target.paid && target.carriedOver) {
+      // Mes siguiente — suma a moneyInHand y desaparece
       const confirmed = window.confirm(
-        `Mark "${target.type}" as paid? It will be removed from the list.`,
+        `Mark "${target.type}" as paid? It will be added to your Money in Hand.`,
       );
       if (!confirmed) return;
+
       const filtered = currentIncomes.filter(
         (i) => i.instanceId !== instanceId,
       );
-      setIncome([
-        ...filtered,
-        { type: "Total", amount: currentTotal + target.amount },
-      ]);
+      const newMoneyInHand = salaryData.moneyInHand + target.amount;
+
+      setIncome([...filtered, { type: "Total", amount: currentTotal }]);
+      setSalaryData((prev) => ({ ...prev, moneyInHand: newMoneyInHand }));
+
+      updateUserData({
+        incomes: [...filtered, { type: "Total", amount: currentTotal }],
+        expenses,
+        payInfo: {
+          ...salaryData,
+          moneyInHand: newMoneyInHand,
+          paymentDates: dateRange,
+        },
+      })
+        .then((updatedUser) => updateUser(updatedUser))
+        .catch(console.error);
     } else if (!target.paid) {
+      // Mes actual — se queda en tabla, suma al Total
       const updated = currentIncomes.map((i) =>
         i.instanceId === instanceId ? { ...i, paid: true } : i,
       );
@@ -835,10 +850,9 @@ const getToday = () => {
         { type: "Total", amount: currentTotal + target.amount },
       ]);
     } else {
+      // Desmarcar — vuelve a gris, resta del Total
       const updated = currentIncomes.map((i) =>
-        i.instanceId === instanceId
-          ? { ...i, paid: false, carriedOver: true }
-          : i,
+        i.instanceId === instanceId ? { ...i, paid: false } : i,
       );
       setIncome([
         ...updated,
@@ -974,7 +988,7 @@ const getToday = () => {
   ) => {
     let appearsFrom = null;
     if (newFrequency) {
-      const today = new Date();
+      const today = getToday();
       const months = anticipationMonths[newFrequency] || 0;
       appearsFrom = new Date(
         today.getFullYear(),
