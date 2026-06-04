@@ -216,7 +216,7 @@ const PersonalFinance = () => {
   /* -------------------- getToday -------------------- */
   // 🧪 TEST: cambia esta fecha para simular días futuros. En prod: new Date()
   const getToday = () => {
-    //return new Date("2026-06-03");
+    return new Date("2026-03-01");
     return new Date();
   };
 
@@ -245,21 +245,21 @@ const PersonalFinance = () => {
    * Se activa solo después de la carga inicial y si el usuario está autenticado.
    */
   useEffect(() => {
-  if (!initialLoadDone.current) return;
-  if (!isAuthenticated) return;
+    if (!initialLoadDone.current) return;
+    if (!isAuthenticated) return;
 
-  const autoSave = async () => {
-    try {
-      const payload = buildPayload();
-      const updatedUser = await updateUserData(payload);
-      updateUser(updatedUser);
-    } catch (err) {
-      console.error("Error al auto-guardar income/expenses:", err);
-    }
-  };
+    const autoSave = async () => {
+      try {
+        const payload = buildPayload();
+        const updatedUser = await updateUserData(payload);
+        updateUser(updatedUser);
+      } catch (err) {
+        console.error("Error al auto-guardar income/expenses:", err);
+      }
+    };
 
-  autoSave();
-}, [income, expenses]);
+    autoSave();
+  }, [income, expenses]);
 
   /**
    * Efecto de carga inicial: sincroniza el estado local con los datos
@@ -409,6 +409,7 @@ const PersonalFinance = () => {
    * @param {Object} user - Objeto del usuario autenticado con su información financiera.
    */
   const checkPeriodChange = async (user) => {
+    console.log("incomes al entrar:", JSON.stringify(user.incomes, null, 2));
     const today = getToday();
     today.setHours(0, 0, 0, 0);
 
@@ -474,6 +475,8 @@ const PersonalFinance = () => {
 
     // 3. Calcular cutDays perdidos desde lastPayDate hasta hoy
     const startDate = new Date(user.payInfo.lastPayDate);
+    console.log("lastPayDate en DB:", user.payInfo.lastPayDate);
+    console.log("startDate:", startDate, "today:", today);
     startDate.setHours(0, 0, 0, 0);
 
     const getCutDates = (from, to) => {
@@ -507,6 +510,7 @@ const PersonalFinance = () => {
 
     const missedCutDates = getCutDates(startDate, today);
     const count = missedCutDates.length;
+    console.log("count:", count, "missedCutDates:", missedCutDates);
 
     // 4. Nada que hacer
     if (count === 0) return;
@@ -607,8 +611,9 @@ const PersonalFinance = () => {
         .filter((i) => i.frequency && !i.paid)
         .map((i) => ({ ...i, carriedOver: true }));
 
+      // Siempre se genera una instancia nueva para el mes actual
       const freshRecurring = baseIncomes
-        .filter((i) => i.frequency && i.paid)
+        .filter((i) => i.frequency)
         .map((i) => ({
           ...i,
           paid: false,
@@ -617,8 +622,12 @@ const PersonalFinance = () => {
             Date.now().toString() + Math.random().toString(36).slice(2),
         }));
 
+      const currentNetSalary = user.incomes?.find(
+        (i) => i.type === "Net Salary",
+      ) || { type: "Net Salary", amount: 0 };
+
       const preAutoCheck = [
-        { type: "Net Salary", amount: 0 },
+        currentNetSalary,
         ...unpaidRecurring,
         ...freshRecurring,
         { type: "Total", amount: 0 },
@@ -632,6 +641,7 @@ const PersonalFinance = () => {
         .map((e) => ({ ...e, paid: false, carriedOver: !e.paid }));
       const finalExpenses = [...nextExpenses, { type: "Total", amount: 0 }];
 
+      console.log("preAutoCheck:", JSON.stringify(preAutoCheck, null, 2));
       await updateUserData({
         incomes: nextIncome,
         expenses: finalExpenses,
