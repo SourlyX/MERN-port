@@ -1,36 +1,40 @@
-import { useState, useContext, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { AuthContext } from '../context/AuthContext'
-import styled from 'styled-components'
+import { useState, useContext, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+import styled from "styled-components";
 
 const Nav = styled.nav`
   position: fixed;
   top: 1px;
   left: 0;
   z-index: 2147483647;
-  background-color: #282C34;
-  color: #55F5ED;
+  background-color: #282c34;
+  color: #55f5ed;
   width: 100%;
-  border: 1px solid #55F5ED;
+  border: 1px solid #55f5ed;
   border-radius: 50px;
   height: 1.5rem;
   font-size: 1rem;
   overflow: hidden;
-  
+
   @media (max-width: 768px) {
     top: 0;
-    border-radius: ${props => props.$menuOpen ? '0 0 16px 16px' : '0'};
-    height: ${props => props.$menuOpen ? 'auto' : '0'};
-    max-height: ${props => props.$menuOpen ? '100vh' : '0'};
-    opacity: ${props => props.$menuOpen ? '1' : '0'};
-    padding: ${props => props.$menuOpen ? '2rem 0' : '0'};
-    border: ${props => props.$menuOpen ? '1px solid #55F5ED' : 'none'};
-    transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.4s ease, border-radius 0.3s ease;
-    Height: 100vh;
+    border-radius: ${(props) => (props.$menuOpen ? "0 0 16px 16px" : "0")};
+    height: ${(props) => (props.$menuOpen ? "auto" : "0")};
+    max-height: ${(props) => (props.$menuOpen ? "100vh" : "0")};
+    opacity: ${(props) => (props.$menuOpen ? "1" : "0")};
+    padding: ${(props) => (props.$menuOpen ? "2rem 0" : "0")};
+    border: ${(props) => (props.$menuOpen ? "1px solid #55F5ED" : "none")};
+    transition:
+      max-height 0.4s ease,
+      opacity 0.3s ease,
+      padding 0.4s ease,
+      border-radius 0.3s ease;
+    height: 100vh;
     opacity: 0.95;
     z-index: 2147483646;
   }
-`
+`;
 
 const List = styled.ul`
   list-style-type: none;
@@ -40,32 +44,32 @@ const List = styled.ul`
   background: none;
   padding: 0;
   margin: 0;
-  transition: all .4s;
+  transition: all 0.4s;
 
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: center;
     gap: 1.5rem;
   }
-`
+`;
 
 const ListItem = styled.li`
   display: block;
   transform: translatey(18px);
-  transition: all .3s;
+  transition: all 0.3s;
   cursor: pointer;
 
   &:hover {
     transform: translatey(-18px);
     padding: 0 1.5rem;
   }
-  
+
   &:hover span {
     transform: translatey(15px);
-    color: #6BFFA6;
+    color: #6bffa6;
   }
 
-  &:before{
+  &:before {
     content: attr(label);
     display: block;
     transform: translatey(-1rem);
@@ -80,30 +84,30 @@ const ListItem = styled.li`
     &:active {
       transform: none;
       padding: 0;
-      background-color: #FF6B6B;
+      background-color: #ff6b6b;
     }
 
     &:before {
       display: none;
     }
   }
-`
+`;
 
 const Hyperlink = styled.a`
-  color: #55F5ED;
+  color: #55f5ed;
   text-decoration: none;
   padding: 10px;
   margin: -10px;
-  background-color: #3B3F46;
+  background-color: #3b3f46;
   border-radius: 50%;
   border: none;
   outline: none;
   cursor: pointer;
   font-family: inherit;
   font-size: inherit;
-  
+
   &:hover {
-    background-color: #FF6B6B;
+    background-color: #ff6b6b;
   }
 
   @media (max-width: 768px) {
@@ -115,10 +119,10 @@ const Hyperlink = styled.a`
 
     &:active {
       background-color: transparent;
-      color: #6BFFA6;
+      color: #6bffa6;
     }
   }
-`
+`;
 
 const Overlay = styled.div`
   position: fixed;
@@ -131,28 +135,28 @@ const Overlay = styled.div`
   align-items: center;
   justify-content: center;
   z-index: 2147483647;
-`
+`;
 
 const Modal = styled.div`
-  background-color: #282C34;
-  border: 1px solid #55F5ED;
+  background-color: #282c34;
+  border: 1px solid #55f5ed;
   border-radius: 16px;
   padding: 2rem;
   text-align: center;
   min-width: 300px;
-`
+`;
 
 const ModalText = styled.p`
   color: #fff;
   font-size: 1.2rem;
   margin-bottom: 1.5rem;
-`
+`;
 
 const ModalButtons = styled.div`
   display: flex;
   justify-content: center;
   gap: 1rem;
-`
+`;
 
 const ModalButton = styled.button`
   padding: 0.5rem 1.5rem;
@@ -161,21 +165,21 @@ const ModalButton = styled.button`
   font-size: 1rem;
   cursor: pointer;
   transition: background-color 0.3s;
-  
+
   &:hover {
     opacity: 0.85;
   }
-`
+`;
 
 const CancelButton = styled(ModalButton)`
   background-color: #4b5563;
   color: #fff;
-`
+`;
 
 const ConfirmButton = styled(ModalButton)`
-  background-color: #FF6B6B;
+  background-color: #ff6b6b;
   color: #fff;
-`
+`;
 
 const HamburgerIcon = styled.button`
   display: none;
@@ -184,59 +188,59 @@ const HamburgerIcon = styled.button`
   right: 1rem;
   background: none;
   border: none;
-  color: #55F5ED;
+  color: #55f5ed;
   font-size: 1.5rem;
   cursor: pointer;
   z-index: 2147483648;
-  
+
   @media (max-width: 768px) {
     display: block;
   }
-`
+`;
 
 function Navbar({ items, contactRef, toastVisibility, setMessage }) {
-  const { isAuthenticated, logout } = useContext(AuthContext)
-  const location = useLocation()
-  const navigate = useNavigate()
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [showModal, setShowModal] = useState(false)
+  const { isAuthenticated, logout } = useContext(AuthContext);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   useEffect(() => {
     const handleEsc = (e) => {
-      if (e.key === 'Escape') setShowModal(false)
-    }
+      if (e.key === "Escape") setShowModal(false);
+    };
 
     if (showModal) {
-      window.addEventListener('keydown', handleEsc)
+      window.addEventListener("keydown", handleEsc);
     }
 
-    return () => window.removeEventListener('keydown', handleEsc)
-  }, [showModal])
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [showModal]);
 
-  let navItems = [...items]
+  let navItems = [...items];
 
   const handleLogout = () => {
-    logout()
-    setShowModal(false)
-    setMessage('Logged out successfully!')
-    toastVisibility(true)
-  }
+    logout();
+    setShowModal(false);
+    setMessage("Logged out successfully!");
+    toastVisibility(true);
+  };
 
   if (isAuthenticated) {
-    navItems.push({ label: 'Logout', url: '/logout' })
+    navItems.push({ label: "Logout", url: "/logout" });
   } else {
-    navItems.push({ label: 'Login', url: '/login' })
+    navItems.push({ label: "Login", url: "/login" });
   }
 
   const handleClick = (url) => {
     if (url === "#contact") {
-      contactRef.current?.scrollIntoView({ behavior: 'smooth' })
+      contactRef.current?.scrollIntoView({ behavior: "smooth" });
       setTimeout(() => {
         window.scrollBy({ top: -100 });
-      }, 700)
+      }, 700);
     } else {
-      window.location.href = url
+      window.location.href = url;
     }
-  }
+  };
 
   return (
     <>
@@ -244,49 +248,53 @@ function Navbar({ items, contactRef, toastVisibility, setMessage }) {
       <Nav $menuOpen={menuOpen}>
         <List>
           {navItems.map((item, index) =>
-            item.label === 'Logout' ? (
+            item.label === "Logout" ? (
               <ListItem
                 label={item.label}
                 key={index}
                 onClick={() => setShowModal(true)}
               >
-                <Hyperlink as="span">{item.label}</Hyperlink>
+                <Hyperlink as="span" onClick={() => setMenuOpen(false)}>
+                  {item.label}
+                </Hyperlink>
               </ListItem>
             ) : (
               <ListItem
                 label={item.label}
                 key={index}
                 onClick={() => {
-                  if (item.url === '#contact') {
-                    contactRef.current?.scrollIntoView({ behavior: 'smooth' })
-                  } else if(item.url === '/login') {
-                    navigate('/login', { state: { from: location.pathname } })
+                  setMenuOpen(false);
+                  if (item.url === "#contact") {
+                    contactRef.current?.scrollIntoView({ behavior: "smooth" });
+                  } else if (item.url === "/login") {
+                    navigate("/login", { state: { from: location.pathname } });
                   } else {
-                    navigate(item.url)
-                }
+                    navigate(item.url);
+                  }
                 }}
               >
-          <Hyperlink as="span">{item.label}</Hyperlink>
-        </ListItem>
-        )
+                <Hyperlink as="span">{item.label}</Hyperlink>
+              </ListItem>
+            ),
           )}
-      </List>
-    </Nav >
+        </List>
+      </Nav>
 
-      { showModal && (
+      {showModal && (
         <Overlay onClick={() => setShowModal(false)}>
           <Modal onClick={(e) => e.stopPropagation()}>
             <ModalText>Are you sure you want to log out?</ModalText>
             <ModalButtons>
-              <CancelButton onClick={() => setShowModal(false)}>Cancel</CancelButton>
+              <CancelButton onClick={() => setShowModal(false)}>
+                Cancel
+              </CancelButton>
               <ConfirmButton onClick={handleLogout}>Yes, logout</ConfirmButton>
             </ModalButtons>
           </Modal>
         </Overlay>
-      )
-}
+      )}
     </>
-  )
+  );
 }
 
-export default Navbar
+export default Navbar;
