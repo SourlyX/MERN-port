@@ -46,23 +46,6 @@ const ExpenseInputContainer = styled(IncAndExpContainer)`
   align-items: center;
 `;
 
-/** Botón estilizado para guardar cambios en la base de datos */
-const SaveButton = styled.button`
-  padding: 10px 20px;
-  border-radius: 10px;
-  border: none;
-  background-color: #4caf50;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-  margin-top: 20px;
-  width: auto;
-
-  &:hover {
-    background-color: #45a049;
-  }
-`;
-
 /** Input estilizado para los campos de tipo y monto */
 const Input = styled.input`
   height: 35px;
@@ -233,7 +216,7 @@ const PersonalFinance = () => {
   /* -------------------- getToday -------------------- */
   // 🧪 TEST: cambia esta fecha para simular días futuros. En prod: new Date()
   const getToday = () => {
-    // return new Date("2025-07-01");
+    //return new Date("2026-06-03");
     return new Date();
   };
 
@@ -256,6 +239,27 @@ const PersonalFinance = () => {
   });
 
   /* -------------------- Efectos -------------------- */
+
+  /**
+   * Efecto de auto-guardado al cambiar ingresos o gastos.
+   * Se activa solo después de la carga inicial y si el usuario está autenticado.
+   */
+  useEffect(() => {
+  if (!initialLoadDone.current) return;
+  if (!isAuthenticated) return;
+
+  const autoSave = async () => {
+    try {
+      const payload = buildPayload();
+      const updatedUser = await updateUserData(payload);
+      updateUser(updatedUser);
+    } catch (err) {
+      console.error("Error al auto-guardar income/expenses:", err);
+    }
+  };
+
+  autoSave();
+}, [income, expenses]);
 
   /**
    * Efecto de carga inicial: sincroniza el estado local con los datos
@@ -388,31 +392,6 @@ const PersonalFinance = () => {
 
     autoSave();
   }, [dateRange]);
-
-  /* -------------------- Handlers -------------------- */
-
-  /**
-   * Guarda manualmente todos los cambios en la base de datos.
-   * Valida que exista un período de pago si el usuario es asalariado.
-   */
-  const saveChanges = async () => {
-    try {
-      if (salaryData.isSalaried) {
-        if (!dateRange[0] || !dateRange[1]) {
-          alert("Please select a payroll period before saving.");
-          return;
-        }
-      }
-
-      const payload = buildPayload();
-      const updatedUser = await updateUserData(payload);
-      updateUser(updatedUser);
-      alert("Changes saved!");
-    } catch (err) {
-      console.error(err);
-      alert("Error: " + err.message);
-    }
-  };
 
   /* -------------------- Estado para nuevos registros -------------------- */
 
@@ -1337,9 +1316,6 @@ const PersonalFinance = () => {
         setMoneyInHand={setMoneyInHand}
         handleEdit={handleEdit}
       />
-
-      {/* Botón para guardar cambios manualmente */}
-      <SaveButton onClick={saveChanges}>Save changes on Database</SaveButton>
     </Container>
   );
 };
