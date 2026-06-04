@@ -216,7 +216,7 @@ const PersonalFinance = () => {
   /* -------------------- getToday -------------------- */
   // 🧪 TEST: cambia esta fecha para simular días futuros. En prod: new Date()
   const getToday = () => {
-    return new Date("2026-03-01");
+    //return new Date("2026-03-01");
     return new Date();
   };
 
