@@ -105,7 +105,7 @@ function App() {
             element={<PersonalFinance />}
           />
           <Route
-            path="/incomes&expenses"
+            path="/personal-finance"
             element={<Navigate to="/projects/personal-finance" replace />}
           />
 
