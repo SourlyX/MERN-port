@@ -9,6 +9,7 @@
 import { useState, useContext, useEffect, useRef } from "react";
 import { AuthContext } from "../../../context/AuthContext";
 import { updateUserData } from "../../../api/users";
+import getToday from "./utils";
 import IncomeFlow from "./IncomeFlow";
 import Tables from "./Tables";
 import styled from "styled-components";
@@ -231,13 +232,6 @@ const PersonalFinance = () => {
 
   /** Almacena la clave del último período guardado para evitar guardados duplicados */
   const lastSavedPeriodStart = useRef(null);
-
-  /* -------------------- getToday -------------------- */
-  // 🧪 TEST: cambia esta fecha para simular días futuros. En prod: new Date()
-  const getToday = () => {
-    return new Date("2026-02-01");
-    return new Date();
-  };
 
   /* -------------------- Helpers -------------------- */
 
@@ -1452,6 +1446,7 @@ const PersonalFinance = () => {
         moneyInHand={salaryData.moneyInHand}
         setMoneyInHand={setMoneyInHand}
         handleEdit={handleEdit}
+        today={getToday()}
       />
     </Container>
   );

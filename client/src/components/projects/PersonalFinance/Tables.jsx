@@ -6,6 +6,7 @@
  */
 
 import { Fragment, useState } from "react";
+import getToday from "./utils";
 import styled from "styled-components";
 
 /* ========================
@@ -161,6 +162,9 @@ const Tables = ({
     frequency: null,
     startDay: 1,
   }); // Estado para los valores editados
+
+  /* Obtener la fecha actual sin tiempo para comparaciones de fechas */
+  const today = getToday();
 
   /* Función para confirmar la edición de un registro, llamando a handleEdit con los nuevos valores */
   const handleConfirm = (table) => {
@@ -496,6 +500,14 @@ const Tables = ({
             </TableHeader>
             <tbody>
               {expenses.map((target, index) => {
+                if (
+                  target.type !== "Total" &&
+                  target.frequency &&
+                  target.appearsFrom &&
+                  new Date(target.appearsFrom) > today
+                ) {
+                  return null;
+                }
                 if (target.type === "Total") {
                   return (
                     <TableRow key="total-expenses">
