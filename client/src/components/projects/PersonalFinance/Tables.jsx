@@ -101,6 +101,39 @@ const Pencil = styled.button`
   }
 `;
 
+const EditInput = styled.input`
+  flex: 1;
+  min-width: 80px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid #4fffff;
+  background-color: transparent;
+  color: #f0f0f0;
+  padding: 0 8px;
+`;
+
+const EditSelect = styled.select`
+  flex: 1;
+  min-width: 100px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid #4fffff;
+  background-color: #383838;
+  color: #f0f0f0;
+  padding: 0 8px;
+  cursor: pointer;
+`;
+
+const EditButton = styled.button`
+  height: 30px;
+  border-radius: 8px;
+  padding: 0 10px;
+  background-color: #55f5ed;
+  color: #282c34;
+  border: none;
+  cursor: pointer;
+`;
+
 /**
  * Componente Tables
  * @param {Array} income - Lista de objetos de ingresos (incluye tipo, monto y posible desglose).
@@ -388,17 +421,19 @@ const Tables = ({
                           >
                             {target.carriedOver && "⚠️ "}
                             {target.type}
-                            {target.frequency && (
-                              <span
-                                style={{
-                                  fontSize: "11px",
-                                  marginLeft: "6px",
-                                  color: "#aaa",
-                                }}
-                              >
-                                ({target.frequency})
-                              </span>
-                            )}
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                marginLeft: "6px",
+                                color: "#aaa",
+                              }}
+                            >
+                              {target.monthNameIncome !== undefined
+                                ? `(${target.monthNameIncome})`
+                                : target.frequency
+                                  ? `(${target.frequency})`
+                                  : ""}
+                            </span>
                           </span>
                         </div>
                       </TableCell>
@@ -485,7 +520,7 @@ const Tables = ({
                           alignItems: "center",
                         }}
                       >
-                        <input
+                        <EditInput
                           type="text"
                           value={editValues.type}
                           onChange={(e) =>
@@ -497,9 +532,8 @@ const Tables = ({
                           onKeyDown={(e) =>
                             e.key === "Enter" && handleConfirm(expenses)
                           }
-                          style={{ flex: "1", minWidth: "80px" }}
                         />
-                        <input
+                        <EditInput
                           type="number"
                           value={editValues.amount}
                           onChange={(e) =>
@@ -511,9 +545,8 @@ const Tables = ({
                           onKeyDown={(e) =>
                             e.key === "Enter" && handleConfirm(expenses)
                           }
-                          style={{ flex: "1", minWidth: "80px" }}
                         />
-                        <select
+                        <EditSelect
                           value={editValues.frequency || "none"}
                           onChange={(e) =>
                             setEditValues({
@@ -524,12 +557,6 @@ const Tables = ({
                                   : e.target.value,
                             })
                           }
-                          style={{
-                            flex: "1",
-                            minWidth: "100px",
-                            height: "30px",
-                            borderRadius: "8px",
-                          }}
                         >
                           <option value="none">None</option>
                           <option value="biweekly">Biweekly</option>
@@ -538,7 +565,7 @@ const Tables = ({
                           <option value="fourmonthly">Four-monthly</option>
                           <option value="semiannual">Semiannual</option>
                           <option value="annual">Annual</option>
-                        </select>
+                        </EditSelect>
                         {editValues.frequency && (
                           <div
                             style={{
@@ -557,7 +584,7 @@ const Tables = ({
                             >
                               Start day
                             </label>
-                            <input
+                            <EditInput
                               type="number"
                               min={1}
                               max={31}
@@ -568,37 +595,16 @@ const Tables = ({
                                   startDay: parseInt(e.target.value) || 1,
                                 })
                               }
-                              style={{
-                                width: "50px",
-                                height: "30px",
-                                borderRadius: "8px",
-                                textAlign: "center",
-                                border: "1px solid #4fffff",
-                                backgroundColor: "transparent",
-                                color: "#f0f0f0",
-                              }}
+                              style={{ width: "50px", textAlign: "center" }}
                             />
                           </div>
                         )}
-
-                        <button
-                          onClick={() => handleConfirm(expenses)}
-                          style={{
-                            backgroundColor: "#55F5ED",
-                            color: "#282C34",
-                          }}
-                        >
+                        <EditButton onClick={() => handleConfirm(expenses)}>
                           ✔
-                        </button>
-                        <button
-                          onClick={() => setEditingRow(null)}
-                          style={{
-                            backgroundColor: "#55F5ED",
-                            color: "#282C34",
-                          }}
-                        >
+                        </EditButton>
+                        <EditButton onClick={() => setEditingRow(null)}>
                           ✗
-                        </button>
+                        </EditButton>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -623,17 +629,19 @@ const Tables = ({
                         >
                           {target.carriedOver && "⚠️ "}
                           {target.type}
-                          {target.frequency && (
-                            <span
-                              style={{
-                                fontSize: "11px",
-                                marginLeft: "6px",
-                                color: "#aaa",
-                              }}
-                            >
-                              ({target.frequency})
-                            </span>
-                          )}
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              marginLeft: "6px",
+                              color: "#aaa",
+                            }}
+                          >
+                            {target.monthNameExpense !== undefined
+                              ? `(${target.monthNameExpense})`
+                              : target.frequency
+                                ? `(${target.frequency})`
+                                : ""}
+                          </span>
                         </span>
                       </div>
                     </TableCell>

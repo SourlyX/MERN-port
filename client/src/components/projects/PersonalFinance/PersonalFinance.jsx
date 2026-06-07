@@ -132,6 +132,25 @@ const FrequencyExtrasWrapper = styled.div`
 /* ======================== Componente Principal ======================== */
 
 const PersonalFinance = () => {
+  /* -------------------- Contexto y datos iniciales -------------------- */
+  /** Función de reset para pruebas: restaura los datos del usuario a un estado
+   * predeterminado y recarga la página para reflejar los cambios. Útil para simular
+   * diferentes escenarios sin necesidad de manipular la base de datos manualmente.
+   */
+  const resetForTesting = async () => {
+    await updateUserData({
+      incomes: income,
+      expenses: expenses,
+      payInfo: {
+        ...salaryData,
+        lastPayDate: new Date("2026-01-01").toISOString(),
+        lastOpened: new Date("2026-01-01").toISOString(),
+        paymentDates: dateRange,
+      },
+    }).then((u) => updateUser(u));
+    window.location.reload();
+  };
+
   // Contexto de autenticación para acceder a datos del usuario
   const { user, isAuthenticated, updateUser } = useContext(AuthContext);
 
@@ -216,7 +235,7 @@ const PersonalFinance = () => {
   /* -------------------- getToday -------------------- */
   // 🧪 TEST: cambia esta fecha para simular días futuros. En prod: new Date()
   const getToday = () => {
-    //return new Date("2026-03-01");
+    return new Date("2026-02-01");
     return new Date();
   };
 
@@ -275,7 +294,7 @@ const PersonalFinance = () => {
       user.incomes && user.incomes.length > 0 ? user.incomes : defaultIncome,
     );
     setExpenses(
-      user.expenses && user.expenses.length > 0
+      user.expenses?.length > 0
         ? user.expenses.map((e) =>
             e.type === "Total"
               ? e
@@ -285,7 +304,7 @@ const PersonalFinance = () => {
                   paid: e.paid ?? false,
                 },
           )
-        : defaultExpenses,
+        : [{ type: "Total", amount: 0 }],
     );
 
     if (user.payInfo?.paymentDates?.length === 2) {
@@ -409,7 +428,6 @@ const PersonalFinance = () => {
    * @param {Object} user - Objeto del usuario autenticado con su información financiera.
    */
   const checkPeriodChange = async (user) => {
-    console.log("incomes al entrar:", JSON.stringify(user.incomes, null, 2));
     const today = getToday();
     today.setHours(0, 0, 0, 0);
 
@@ -475,8 +493,6 @@ const PersonalFinance = () => {
 
     // 3. Calcular cutDays perdidos desde lastPayDate hasta hoy
     const startDate = new Date(user.payInfo.lastPayDate);
-    console.log("lastPayDate en DB:", user.payInfo.lastPayDate);
-    console.log("startDate:", startDate, "today:", today);
     startDate.setHours(0, 0, 0, 0);
 
     const getCutDates = (from, to) => {
@@ -510,7 +526,6 @@ const PersonalFinance = () => {
 
     const missedCutDates = getCutDates(startDate, today);
     const count = missedCutDates.length;
-    console.log("count:", count, "missedCutDates:", missedCutDates);
 
     // 4. Nada que hacer
     if (count === 0) return;
@@ -607,20 +622,55 @@ const PersonalFinance = () => {
     } else {
       const baseIncomes = user.incomes?.slice(0, -1) || [];
 
+      const monthName = lastCutDate.toLocaleString("en-US", { month: "long" });
+
       const unpaidRecurring = baseIncomes
         .filter((i) => i.frequency && !i.paid)
-        .map((i) => ({ ...i, carriedOver: true }));
+        .map((i) => {
+          const { _id, ...rest } = i;
+          return {
+            ...rest,
+            carriedOver: true,
+            monthNameIncome:
+              i.monthNameIncome ||
+              new Date(i.appearsFrom).toLocaleString("en-US", {
+                month: "long",
+              }),
+          };
+        });
 
-      // Siempre se genera una instancia nueva para el mes actual
+      const freshMonth = new Date(
+        lastCutDate.getFullYear(),
+        lastCutDate.getMonth() + 1,
+        1,
+      ).toLocaleString("en-US", { month: "long" });
+
       const freshRecurring = baseIncomes
-        .filter((i) => i.frequency)
-        .map((i) => ({
-          ...i,
-          paid: false,
-          carriedOver: false,
-          instanceId:
-            Date.now().toString() + Math.random().toString(36).slice(2),
-        }));
+        .filter((i) => {
+          if (!i.frequency) return false;
+          if (i.paid) return true;
+          const alreadyHasCarriedOver = baseIncomes.some(
+            (other) =>
+              other.frequency &&
+              other.carriedOver &&
+              other.type === i.type &&
+              other.instanceId !== i.instanceId,
+          );
+          return !i.carriedOver && !alreadyHasCarriedOver;
+        })
+        .map((i) => {
+          const { _id, ...rest } = i;
+          return {
+            ...rest,
+            paid: false,
+            carriedOver: false,
+            manuallyUnchecked: false,
+            monthNameIncome:
+              i.frequency === "biweekly" ? lastCutDate.getDate() : freshMonth,
+            instanceId:
+              Date.now().toString() + Math.random().toString(36).slice(2),
+          };
+        });
 
       const currentNetSalary = user.incomes?.find(
         (i) => i.type === "Net Salary",
@@ -636,12 +686,56 @@ const PersonalFinance = () => {
       const { income: nextIncome } = applyAutoCheck(preAutoCheck, today);
 
       const baseExpenses = user.expenses?.slice(0, -1) || [];
-      const nextExpenses = baseExpenses
-        .filter((e) => e.frequency)
-        .map((e) => ({ ...e, paid: false, carriedOver: !e.paid }));
-      const finalExpenses = [...nextExpenses, { type: "Total", amount: 0 }];
+      const seenTypes = new Set();
 
-      console.log("preAutoCheck:", JSON.stringify(preAutoCheck, null, 2));
+      const unpaidExpenses = baseExpenses
+        .filter((e) => {
+          if (!e.frequency || e.paid) return false;
+          if (seenTypes.has(e.type)) return false;
+          seenTypes.add(e.type);
+          return true;
+        })
+        .map((e) => {
+          const { _id, ...rest } = e;
+          return {
+            ...rest,
+            carriedOver: true,
+            monthNameExpense:
+              e.monthNameExpense ||
+              new Date(e.appearsFrom).toLocaleString("en-US", {
+                month: "long",
+              }),
+          };
+        });
+
+      const freshTypes = new Set();
+
+      const freshExpenses = baseExpenses
+        .filter((e) => {
+          if (!e.frequency) return false;
+          if (freshTypes.has(e.type)) return false;
+          freshTypes.add(e.type);
+          return true;
+        })
+        .map((e) => {
+          const { _id, ...rest } = e;
+          return {
+            ...rest,
+            paid: false,
+            carriedOver: false,
+            monthNameExpense:
+              e.frequency === "biweekly" ? lastCutDate.getDate() : freshMonth,
+            instanceId:
+              Date.now().toString() + Math.random().toString(36).slice(2),
+          };
+        });
+
+      const finalExpenses = [
+        ...unpaidExpenses,
+        ...freshExpenses,
+        { type: "Total", amount: 0 },
+      ];
+
       await updateUserData({
         incomes: nextIncome,
         expenses: finalExpenses,
@@ -675,6 +769,30 @@ const PersonalFinance = () => {
    * @param {number} index - Índice del gasto a modificar en la lista de expenses.
    */
   const handleTogglePaid = (index) => {
+    const target = expenses[index];
+
+    if (target.carriedOver && !target.paid) {
+      const confirmed = window.confirm(
+        `This is a carried over expense. Marking it as paid will remove it from the list and deduct ₡${target.amount} from your Money in Hand. Continue?`,
+      );
+      if (!confirmed) return;
+
+      const filtered = expenses.filter((_, i) => i !== index);
+      const currentExpenses = filtered.slice(0, -1);
+      const newTotalAmount = currentExpenses.reduce(
+        (sum, e) => sum + (e.paid ? e.amount : 0),
+        0,
+      );
+      const newMoneyInHand = salaryData.moneyInHand - target.amount;
+
+      setExpenses([
+        ...currentExpenses,
+        { type: "Total", amount: newTotalAmount },
+      ]);
+      setSalaryData((prev) => ({ ...prev, moneyInHand: newMoneyInHand }));
+      return;
+    }
+
     const updatedExpenses = expenses.map((e, i) =>
       i === index ? { ...e, paid: !e.paid } : e,
     );
@@ -770,9 +888,9 @@ const PersonalFinance = () => {
     const currentItems = incomeArray.slice(0, -1);
     const updated = currentItems.map((item) => {
       if (
-        item.frequency &&
         !item.paid &&
         !item.carriedOver &&
+        !item.manuallyUnchecked &&
         item.appearsFrom &&
         new Date(item.appearsFrom) <= today
       ) {
@@ -839,9 +957,11 @@ const PersonalFinance = () => {
         { type: "Total", amount: currentTotal + target.amount },
       ]);
     } else {
-      // Desmarcar — vuelve a gris, resta del Total
+      // Desmarcar — vuelve a gris, resta del Total, marca como desmarcado manualmente
       const updated = currentIncomes.map((i) =>
-        i.instanceId === instanceId ? { ...i, paid: false } : i,
+        i.instanceId === instanceId
+          ? { ...i, paid: false, carriedOver: true, manuallyUnchecked: true }
+          : i,
       );
       setIncome([
         ...updated,
@@ -1057,6 +1177,13 @@ const PersonalFinance = () => {
 
   return (
     <Container>
+      {/* Botón de reset para testing */}
+      {/*<button
+        onClick={resetForTesting}
+        style={{ backgroundColor: "red", color: "white", padding: "10px" }}
+      >
+        RESET TEST
+      </button>*/}
       {/* Sección de entrada para nuevos ingresos */}
       <IncAndExpContainer>
         <Input
