@@ -9,7 +9,7 @@
 import { useState, useContext, useEffect, useRef } from "react";
 import { AuthContext } from "../../../context/AuthContext";
 import { updateUserData } from "../../../api/users";
-import getToday from "./utils";
+import { getToday, getOrdinal } from "./utils";
 import IncomeFlow from "./IncomeFlow";
 import Tables from "./Tables";
 import styled from "styled-components";
@@ -35,6 +35,7 @@ const Container = styled.div`
 /** Contenedor horizontal para los inputs de ingresos y gastos */
 const IncAndExpContainer = styled.div`
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: 10px;
@@ -233,6 +234,9 @@ const PersonalFinance = () => {
   /** Almacena la clave del último período guardado para evitar guardados duplicados */
   const lastSavedPeriodStart = useRef(null);
 
+  /** Evita que el efecto de cambio de período se ejecute múltiples veces durante la transición */
+  const isPeriodChanging = useRef(false);
+
   /* -------------------- Helpers -------------------- */
 
   /**
@@ -260,6 +264,7 @@ const PersonalFinance = () => {
   useEffect(() => {
     if (!initialLoadDone.current) return;
     if (!isAuthenticated) return;
+    if (isPeriodChanging.current) return;
 
     const autoSave = async () => {
       try {
@@ -284,68 +289,54 @@ const PersonalFinance = () => {
 
     initialLoadDone.current = true;
 
-    setIncome(
-      user.incomes && user.incomes.length > 0 ? user.incomes : defaultIncome,
-    );
-    setExpenses(
-      user.expenses?.length > 0
-        ? user.expenses.map((e) =>
-            e.type === "Total"
-              ? e
-              : {
-                  ...e,
-                  isRecurring: e.isRecurring ?? false,
-                  paid: e.paid ?? false,
-                },
-          )
-        : [{ type: "Total", amount: 0 }],
-    );
+    const init = async () => {
+      isPeriodChanging.current = true;
+      setIncome(user.incomes?.length > 0 ? user.incomes : defaultIncome);
+      setExpenses(
+        user.expenses?.length > 0
+          ? user.expenses.map((e) =>
+              e.type === "Total"
+                ? e
+                : {
+                    ...e,
+                    isRecurring: e.isRecurring ?? false,
+                    paid: e.paid ?? false,
+                    startDate: e.startDate ?? null,
+                  },
+            )
+          : [{ type: "Total", amount: 0 }],
+      );
 
-    if (user.payInfo?.paymentDates?.length === 2) {
-      setDateRange([
-        new Date(user.payInfo.paymentDates[0]),
-        new Date(user.payInfo.paymentDates[1]),
-      ]);
-    }
+      if (user.payInfo?.paymentDates?.length === 2) {
+        setDateRange([
+          new Date(user.payInfo.paymentDates[0]),
+          new Date(user.payInfo.paymentDates[1]),
+        ]);
+      }
 
-    if (user.payInfo) {
-      setSalaryData({
-        grossSalary: user.payInfo.grossSalary || "",
-        taxes: user.payInfo.taxes || 0,
-        vto: user.payInfo.vto || "",
-        ot: user.payInfo.ot || "",
-        isSalaried: !!user.payInfo.isSalaried,
-        cutDays: user.payInfo.cutDays || [1, 16],
-        payDays: user.payInfo.payDays || [15, 30],
-        moneyInHand: user.payInfo.moneyInHand || 0,
-        workdayHours: user.payInfo.workdayHours || 8,
-        lastOpened: user.payInfo.lastOpened || null,
-        lastPayDate: user.payInfo.lastPayDate || null,
-      });
-    }
-    checkPeriodChange(user);
+      if (user.payInfo) {
+        setSalaryData({
+          grossSalary: user.payInfo.grossSalary || "",
+          taxes: user.payInfo.taxes || 0,
+          vto: user.payInfo.vto || "",
+          ot: user.payInfo.ot || "",
+          isSalaried: !!user.payInfo.isSalaried,
+          cutDays: user.payInfo.cutDays || [1, 16],
+          payDays: user.payInfo.payDays || [15, 30],
+          moneyInHand: user.payInfo.moneyInHand || 0,
+          workdayHours: user.payInfo.workdayHours || 8,
+          lastOpened: user.payInfo.lastOpened || null,
+          lastPayDate: user.payInfo.lastPayDate || null,
+        });
+      }
 
-    const loadedIncomes =
-      user.incomes && user.incomes.length > 0 ? user.incomes : defaultIncome;
+      const syncedUser = await checkPeriodChange(user);
+      await processDueRecurring(syncedUser || user);
 
-    const today = getToday();
-    today.setHours(0, 0, 0, 0);
+      isPeriodChanging.current = false;
+    };
 
-    const { income: autoChecked, changed } = applyAutoCheck(
-      loadedIncomes,
-      today,
-    );
-
-    if (changed) {
-      setIncome(autoChecked);
-      updateUserData({
-        incomes: autoChecked,
-        expenses: user.expenses,
-        payInfo: { ...user.payInfo },
-      })
-        .then((updatedUser) => updateUser(updatedUser))
-        .catch(console.error);
-    }
+    init();
   }, [isAuthenticated, user]);
 
   /**
@@ -421,272 +412,376 @@ const PersonalFinance = () => {
    * Este proceso se ejecuta al cargar la aplicación para mantener los datos sincronizados.
    * @param {Object} user - Objeto del usuario autenticado con su información financiera.
    */
-  const checkPeriodChange = async (user) => {
-    const today = getToday();
-    today.setHours(0, 0, 0, 0);
+  const checkPeriodChange = async (currentUser) => {
+    if (!currentUser) return currentUser;
 
-    // 1. Primera apertura
-    if (!user.payInfo?.lastOpened) {
-      await updateUserData({
-        incomes: user.incomes,
-        expenses: user.expenses,
-        payInfo: {
-          ...user.payInfo,
-          lastOpened: today.toISOString(),
-        },
-      })
-        .then((updatedUser) => {
-          updateUser(updatedUser);
-          setSalaryData((prev) => ({
-            ...prev,
+    isPeriodChanging.current = true;
+
+    try {
+      const today = getToday();
+      today.setHours(0, 0, 0, 0);
+
+      // 1) Primera apertura
+      if (!currentUser.payInfo?.lastOpened) {
+        const updatedUser = await updateUserData({
+          incomes: currentUser.incomes,
+          expenses: currentUser.expenses,
+          payInfo: {
+            ...currentUser.payInfo,
             lastOpened: today.toISOString(),
-          }));
-        })
-        .catch(console.error);
-      return;
-    }
+          },
+        });
 
-    const rawCutDays = user.payInfo.cutDays || [1, 16];
+        updateUser(updatedUser);
 
-    // 2. Sin baseline — buscar payday más reciente antes de hoy
-    if (!user.payInfo?.lastPayDate) {
-      const rawPayDays = user.payInfo.payDays || [15, 30];
-
-      const pastPayDays = rawPayDays
-        .map((d) => {
-          const date = new Date(today.getFullYear(), today.getMonth(), d);
-          date.setHours(0, 0, 0, 0);
-          return date;
-        })
-        .filter((d) => d <= today)
-        .sort((a, b) => b - a);
-
-      const baseline =
-        pastPayDays[0] || new Date(today.getFullYear(), today.getMonth(), 1);
-
-      await updateUserData({
-        incomes: user.incomes,
-        expenses: user.expenses,
-        payInfo: {
-          ...user.payInfo,
-          lastPayDate: baseline.toISOString(),
+        setSalaryData((prev) => ({
+          ...prev,
           lastOpened: today.toISOString(),
-        },
-      })
-        .then((updatedUser) => {
-          updateUser(updatedUser);
-          setSalaryData((prev) => ({
-            ...prev,
+        }));
+
+        return updatedUser;
+      }
+
+      const rawCutDays = currentUser.payInfo.cutDays || [1, 16];
+
+      // 2) Sin baseline — buscar payday más reciente antes de hoy
+      if (!currentUser.payInfo?.lastPayDate) {
+        const rawPayDays = currentUser.payInfo.payDays || [15, 30];
+
+        const pastPayDays = rawPayDays
+          .map((d) => {
+            const date = new Date(today.getFullYear(), today.getMonth(), d);
+            date.setHours(0, 0, 0, 0);
+            return date;
+          })
+          .filter((d) => d <= today)
+          .sort((a, b) => b - a);
+
+        const baseline =
+          pastPayDays[0] || new Date(today.getFullYear(), today.getMonth(), 1);
+
+        const updatedUser = await updateUserData({
+          incomes: currentUser.incomes,
+          expenses: currentUser.expenses,
+          payInfo: {
+            ...currentUser.payInfo,
             lastPayDate: baseline.toISOString(),
             lastOpened: today.toISOString(),
-          }));
-        })
-        .catch(console.error);
-      return;
-    }
+          },
+        });
 
-    // 3. Calcular cutDays perdidos desde lastPayDate hasta hoy
-    const startDate = new Date(user.payInfo.lastPayDate);
-    startDate.setHours(0, 0, 0, 0);
+        updateUser(updatedUser);
 
-    const getCutDates = (from, to) => {
-      const dates = [];
-      let year = from.getFullYear();
-      let month = from.getMonth();
+        setSalaryData((prev) => ({
+          ...prev,
+          lastPayDate: baseline.toISOString(),
+          lastOpened: today.toISOString(),
+        }));
 
-      while (new Date(year, month, 1) <= to) {
-        const lastDay = new Date(year, month + 1, 0).getDate();
-        const uniqueDays = [
-          ...new Set(rawCutDays.map((d) => Math.min(d, lastDay))),
-        ];
+        return updatedUser;
+      }
 
-        for (const day of uniqueDays) {
-          const cutDate = new Date(year, month, day);
-          cutDate.setHours(0, 0, 0, 0);
-          if (cutDate > from && cutDate <= to) {
-            dates.push(cutDate);
+      // 3) Calcular cutDays perdidos desde lastPayDate hasta hoy
+      const startDate = new Date(currentUser.payInfo.lastPayDate);
+      startDate.setHours(0, 0, 0, 0);
+
+      const getCutDates = (from, to) => {
+        const dates = [];
+        let year = from.getFullYear();
+        let month = from.getMonth();
+
+        while (new Date(year, month, 1) <= to) {
+          const lastDay = new Date(year, month + 1, 0).getDate();
+          const uniqueDays = [
+            ...new Set(rawCutDays.map((d) => Math.min(d, lastDay))),
+          ];
+
+          for (const day of uniqueDays) {
+            const cutDate = new Date(year, month, day);
+            cutDate.setHours(0, 0, 0, 0);
+            if (cutDate > from && cutDate <= to) {
+              dates.push(cutDate);
+            }
+          }
+
+          month++;
+          if (month > 11) {
+            month = 0;
+            year++;
           }
         }
 
-        month++;
-        if (month > 11) {
-          month = 0;
-          year++;
-        }
+        return dates;
+      };
+
+      const missedCutDates = getCutDates(startDate, today);
+      const count = missedCutDates.length;
+
+      if (count === 0) {
+        return currentUser;
       }
 
-      return dates;
-    };
+      const lastCutDate = missedCutDates[missedCutDates.length - 1];
 
-    const missedCutDates = getCutDates(startDate, today);
-    const count = missedCutDates.length;
+      const totalExpenses = currentUser.expenses?.at(-1)?.amount || 0;
+      const totalIncome =
+        currentUser.incomes?.filter((i) => !i.isPendingPayday).at(-1)?.amount ||
+        0;
 
-    // 4. Nada que hacer
-    if (count === 0) return;
+      const realBalance =
+        (currentUser.payInfo.moneyInHand || 0) + (totalIncome - totalExpenses);
 
-    const lastCutDate = missedCutDates[missedCutDates.length - 1];
+      // 4) Un solo período perdido
+      if (count === 1) {
+        const baseIncomes = currentUser.incomes?.slice(0, -1) || [];
 
-    const totalExpenses = user.expenses?.at(-1)?.amount || 0;
-    const totalIncome =
-      user.incomes?.filter((i) => !i.isPendingPayday).at(-1)?.amount || 0;
-    const realBalance =
-      (user.payInfo.moneyInHand || 0) + (totalIncome - totalExpenses);
+        const hasExistingPending = baseIncomes.some((i) => i.isPendingPayday);
 
-    // 5. Un período
-    if (count === 1) {
-      const baseIncomes = user.incomes?.slice(0, -1) || [];
+        const promotedIncomes = hasExistingPending
+          ? baseIncomes.map((i) =>
+              i.isPendingPayday ? { ...i, isPendingPayday: false } : i,
+            )
+          : baseIncomes;
 
-      const hasExistingPending = baseIncomes.some((i) => i.isPendingPayday);
+        const promotedTotal = promotedIncomes.reduce(
+          (sum, i) => sum + i.amount,
+          0,
+        );
 
-      const promotedIncomes = hasExistingPending
-        ? baseIncomes.map((i) =>
-            i.isPendingPayday ? { ...i, isPendingPayday: false } : i,
-          )
-        : baseIncomes;
+        const netSalary =
+          currentUser.incomes?.find((i) => i.type === "Net Salary")?.amount ||
+          0;
 
-      const promotedTotal = promotedIncomes.reduce(
-        (sum, i) => sum + i.amount,
-        0,
-      );
+        const updatedIncome =
+          netSalary > 0
+            ? [
+                ...promotedIncomes,
+                {
+                  type: "Pending payday",
+                  amount: netSalary,
+                  isPendingPayday: true,
+                },
+                { type: "Total", amount: promotedTotal },
+              ]
+            : [...promotedIncomes, { type: "Total", amount: promotedTotal }];
 
-      const netSalary =
-        user.incomes?.find((i) => i.type === "Net Salary")?.amount || 0;
+        const updatedUser = await updateUserData({
+          incomes: updatedIncome,
+          expenses: currentUser.expenses,
+          payInfo: {
+            ...currentUser.payInfo,
+            vto: "",
+            ot: "",
+            moneyInHand: realBalance,
+            lastPayDate: lastCutDate.toISOString(),
+            lastOpened: today.toISOString(),
+          },
+        });
 
-      const updatedIncome =
-        netSalary > 0
-          ? [
-              ...promotedIncomes,
-              {
-                type: "Pending payday",
-                amount: netSalary,
-                isPendingPayday: true,
-              },
-              { type: "Total", amount: promotedTotal },
-            ]
-          : [...promotedIncomes, { type: "Total", amount: promotedTotal }];
+        updateUser(updatedUser);
 
-      await updateUserData({
-        incomes: updatedIncome,
-        expenses: user.expenses,
+        setIncome(updatedIncome);
+        setSalaryData((prev) => ({
+          ...prev,
+          vto: "",
+          ot: "",
+          moneyInHand: realBalance,
+          lastPayDate: lastCutDate.toISOString(),
+          lastOpened: today.toISOString(),
+        }));
+
+        return updatedUser;
+      }
+
+      // 5) Múltiples períodos perdidos: solo lógica de nómina
+      const updatedUser = await updateUserData({
+        incomes: currentUser.incomes,
+        expenses: currentUser.expenses,
         payInfo: {
-          ...user.payInfo,
+          ...currentUser.payInfo,
           vto: "",
           ot: "",
           moneyInHand: realBalance,
           lastPayDate: lastCutDate.toISOString(),
           lastOpened: today.toISOString(),
         },
-      })
-        .then((updatedUser) => {
-          updateUser(updatedUser);
-          setIncome(updatedIncome);
-          setSalaryData((prev) => ({
-            ...prev,
-            vto: "",
-            ot: "",
-            moneyInHand: realBalance,
-            lastPayDate: lastCutDate.toISOString(),
-            lastOpened: today.toISOString(),
-          }));
-          const { income: autoChecked, changed } = applyAutoCheck(
-            updatedIncome,
-            today,
-          );
-          if (changed) {
-            setIncome(autoChecked);
-            updateUserData({
-              incomes: autoChecked,
-              expenses: user.expenses,
-              payInfo: {
-                ...user.payInfo,
-                vto: "",
-                ot: "",
-                moneyInHand: realBalance,
-                lastPayDate: lastCutDate.toISOString(),
-                lastOpened: today.toISOString(),
-              },
-            })
-              .then((u) => updateUser(u))
-              .catch(console.error);
-          }
-        })
-        .catch(console.error);
+      });
 
-      // 6. Múltiples períodos
-    } else {
-      const baseIncomes = user.incomes?.slice(0, -1) || [];
+      updateUser(updatedUser);
 
-      const monthName = lastCutDate.toLocaleString("en-US", { month: "long" });
+      setSalaryData((prev) => ({
+        ...prev,
+        vto: "",
+        ot: "",
+        moneyInHand: realBalance,
+        lastPayDate: lastCutDate.toISOString(),
+        lastOpened: today.toISOString(),
+      }));
+
+      return updatedUser;
+    } catch (err) {
+      console.error("Error en checkPeriodChange:", err);
+      return currentUser;
+    } finally {
+      isPeriodChanging.current = false;
+    }
+  };
+
+  /* Revisa los ingresos y gastos recurrentes para detectar cuáles ya deberían aparecer
+    * según su fecha "appearsFrom" y la fecha actual. Marca como pagados los ingresos recurrentes
+    * que ya aparecieron, y para los gastos recurrentes muestra una alerta para marcar como pagados
+    * o llevar al siguiente período. Luego, para ambos casos, calcula la próxima fecha de aparición
+    * según la frecuencia y actualiza los datos del usuario en consecuencia. */
+  const processDueRecurring = async (currentUser) => {
+    if (!currentUser || !isAuthenticated) return currentUser;
+
+    const today = getToday();
+    today.setHours(0, 0, 0, 0);
+
+    const isVisible = (item) =>
+      !item.appearsFrom || new Date(item.appearsFrom) <= today;
+
+    const isDue = (item) =>
+      item.startDate ? new Date(item.startDate) <= today : isVisible(item);
+
+    const getNextAppearsFrom = (currentAppearsFrom, frequency) => {
+      if (!currentAppearsFrom) return null;
+      const months = frequencyMonths[frequency] || 1;
+      const current = new Date(currentAppearsFrom);
+      return new Date(
+        Date.UTC(current.getUTCFullYear(), current.getUTCMonth() + months, 1),
+      );
+    };
+
+    const getNextStartDate = (currentStartDate, frequency) => {
+      if (!currentStartDate) return null;
+      const months = frequencyMonths[frequency] || 1;
+      const current = new Date(currentStartDate);
+      return new Date(
+        Date.UTC(
+          current.getUTCFullYear(),
+          current.getUTCMonth() + months,
+          current.getUTCDate(),
+        ),
+      );
+    };
+
+    const getMonthLabel = (startDate, frequency) => {
+      if (!startDate) return null;
+      const date = new Date(startDate);
+
+      if (frequency === "biweekly") {
+        return getOrdinal(date.getUTCDate());
+      }
+
+      const month = date.toLocaleString("en-US", {
+        month: "short",
+        timeZone: "UTC",
+      });
+      const day = getOrdinal(date.getUTCDate());
+      return `${month} ${day}`;
+    };
+
+    const baseIncomes = currentUser.incomes?.slice(0, -1) || [];
+    const baseExpenses = currentUser.expenses?.slice(0, -1) || [];
+
+    const hasDueRecurring =
+      baseIncomes.some((i) => i.frequency && isDue(i)) ||
+      baseExpenses.some((e) => e.frequency && isDue(e));
+
+    if (!hasDueRecurring) {
+      return currentUser;
+    }
+
+    isPeriodChanging.current = true;
+
+    try {
+      // ---------- INCOMES ----------
+      const seenUnpaidIncome = new Set();
+      const freshIncomeTypes = new Set();
 
       const unpaidRecurring = baseIncomes
-        .filter((i) => i.frequency && !i.paid)
+        .filter((i) => {
+          if (!i.frequency || i.paid) return false;
+          if (!isDue(i)) return false;
+          if (seenUnpaidIncome.has(i.type)) return false;
+          seenUnpaidIncome.add(i.type);
+          return true;
+        })
         .map((i) => {
           const { _id, ...rest } = i;
           return {
             ...rest,
             carriedOver: true,
-            monthNameIncome:
-              i.monthNameIncome ||
-              new Date(i.appearsFrom).toLocaleString("en-US", {
-                month: "long",
-              }),
+            monthNameIncome: getMonthLabel(i.startDate, i.frequency),
           };
         });
-
-      const freshMonth = new Date(
-        lastCutDate.getFullYear(),
-        lastCutDate.getMonth() + 1,
-        1,
-      ).toLocaleString("en-US", { month: "long" });
 
       const freshRecurring = baseIncomes
         .filter((i) => {
           if (!i.frequency) return false;
-          if (i.paid) return true;
-          const alreadyHasCarriedOver = baseIncomes.some(
-            (other) =>
-              other.frequency &&
-              other.carriedOver &&
-              other.type === i.type &&
-              other.instanceId !== i.instanceId,
-          );
-          return !i.carriedOver && !alreadyHasCarriedOver;
+          if (!isDue(i)) return false;
+          if (freshIncomeTypes.has(i.type)) return false;
+          freshIncomeTypes.add(i.type);
+          return true;
         })
         .map((i) => {
           const { _id, ...rest } = i;
+          const nextAppearsFrom = getNextAppearsFrom(
+            i.appearsFrom,
+            i.frequency,
+          );
+          const nextStartDate = getNextStartDate(i.startDate, i.frequency);
+
           return {
             ...rest,
             paid: false,
             carriedOver: false,
             manuallyUnchecked: false,
-            monthNameIncome:
-              i.frequency === "biweekly" ? lastCutDate.getDate() : freshMonth,
+            appearsFrom: nextAppearsFrom ? nextAppearsFrom.toISOString() : null,
+            startDate: nextStartDate ? nextStartDate.toISOString() : null,
+            monthNameIncome: getMonthLabel(nextStartDate, i.frequency),
             instanceId:
               Date.now().toString() + Math.random().toString(36).slice(2),
           };
         });
 
-      const currentNetSalary = user.incomes?.find(
+      const pendingIncomes = baseIncomes.filter(
+        (i) => i.frequency && isVisible(i) && !isDue(i),
+      );
+
+      const futureIncomes = baseIncomes.filter(
+        (i) => i.frequency && !isVisible(i),
+      );
+
+      const currentNetSalary = currentUser.incomes?.find(
         (i) => i.type === "Net Salary",
-      ) || { type: "Net Salary", amount: 0 };
+      ) || {
+        type: "Net Salary",
+        amount: 0,
+      };
 
       const preAutoCheck = [
         currentNetSalary,
         ...unpaidRecurring,
         ...freshRecurring,
+        ...pendingIncomes,
+        ...futureIncomes,
         { type: "Total", amount: 0 },
       ];
 
       const { income: nextIncome } = applyAutoCheck(preAutoCheck, today);
 
-      const baseExpenses = user.expenses?.slice(0, -1) || [];
-      const seenTypes = new Set();
+      // ---------- EXPENSES ----------
+      const seenUnpaidExpense = new Set();
+      const freshExpenseTypes = new Set();
 
       const unpaidExpenses = baseExpenses
         .filter((e) => {
           if (!e.frequency || e.paid) return false;
-          if (seenTypes.has(e.type)) return false;
-          seenTypes.add(e.type);
+          if (!isDue(e)) return false;
+          if (seenUnpaidExpense.has(e.type)) return false;
+          seenUnpaidExpense.add(e.type);
           return true;
         })
         .map((e) => {
@@ -694,68 +789,70 @@ const PersonalFinance = () => {
           return {
             ...rest,
             carriedOver: true,
-            monthNameExpense:
-              e.monthNameExpense ||
-              new Date(e.appearsFrom).toLocaleString("en-US", {
-                month: "long",
-              }),
+            monthNameExpense: getMonthLabel(e.startDate, e.frequency),
           };
         });
-
-      const freshTypes = new Set();
 
       const freshExpenses = baseExpenses
         .filter((e) => {
           if (!e.frequency) return false;
-          if (freshTypes.has(e.type)) return false;
-          freshTypes.add(e.type);
+          if (!isDue(e)) return false;
+          if (freshExpenseTypes.has(e.type)) return false;
+          freshExpenseTypes.add(e.type);
           return true;
         })
         .map((e) => {
           const { _id, ...rest } = e;
+          const nextAppearsFrom = getNextAppearsFrom(
+            e.appearsFrom,
+            e.frequency,
+          );
+          const nextStartDate = getNextStartDate(e.startDate, e.frequency);
+
           return {
             ...rest,
             paid: false,
             carriedOver: false,
-            monthNameExpense:
-              e.frequency === "biweekly" ? lastCutDate.getDate() : freshMonth,
-            instanceId:
-              Date.now().toString() + Math.random().toString(36).slice(2),
+            appearsFrom: nextAppearsFrom ? nextAppearsFrom.toISOString() : null,
+            startDate: nextStartDate ? nextStartDate.toISOString() : null,
+            monthNameExpense: getMonthLabel(nextStartDate, e.frequency),
           };
         });
+
+      const pendingExpenses = baseExpenses.filter(
+        (e) => e.frequency && isVisible(e) && !isDue(e),
+      );
+
+      const futureExpenses = baseExpenses.filter(
+        (e) => e.frequency && !isVisible(e),
+      );
 
       const finalExpenses = [
         ...unpaidExpenses,
         ...freshExpenses,
+        ...pendingExpenses,
+        ...futureExpenses,
         { type: "Total", amount: 0 },
       ];
 
-      await updateUserData({
+      const updatedUser = await updateUserData({
         incomes: nextIncome,
         expenses: finalExpenses,
         payInfo: {
-          ...user.payInfo,
-          vto: "",
-          ot: "",
-          moneyInHand: realBalance,
-          lastPayDate: lastCutDate.toISOString(),
-          lastOpened: today.toISOString(),
+          ...currentUser.payInfo,
         },
-      })
-        .then((updatedUser) => {
-          updateUser(updatedUser);
-          setIncome(nextIncome);
-          setExpenses(finalExpenses);
-          setSalaryData((prev) => ({
-            ...prev,
-            vto: "",
-            ot: "",
-            moneyInHand: realBalance,
-            lastPayDate: lastCutDate.toISOString(),
-            lastOpened: today.toISOString(),
-          }));
-        })
-        .catch(console.error);
+      });
+
+      updateUser(updatedUser);
+      setIncome(nextIncome);
+      setExpenses(finalExpenses);
+
+      return updatedUser;
+    } catch (err) {
+      console.error("Error en processDueRecurring:", err);
+      return currentUser;
+    } finally {
+      isPeriodChanging.current = false;
     }
   };
 
@@ -822,6 +919,7 @@ const PersonalFinance = () => {
     }
 
     let appearsFrom = null;
+    let startDate = null;
     if (incomeFrequency) {
       const start = new Date(incomeStartDate);
       const months = anticipationMonths[incomeFrequency] || 0;
@@ -830,6 +928,7 @@ const PersonalFinance = () => {
         start.getMonth() - months,
         1,
       ).toISOString();
+      startDate = start.toISOString();
     }
 
     const newIncomeObject = {
@@ -837,6 +936,7 @@ const PersonalFinance = () => {
       amount: parseFloat(newIncome),
       frequency: incomeFrequency || null,
       appearsFrom,
+      startDate,
       ...(incomeFrequency && {
         paid: false,
         carriedOver: false,
@@ -871,6 +971,16 @@ const PersonalFinance = () => {
     fourmonthly: 1,
     semiannual: 2,
     annual: 3,
+  };
+
+  /* Mapeo de frecuencias a meses para calcular la aparición automática de ingresos recurrentes en función de su fecha "appearsFrom" y la fecha actual. */
+  const frequencyMonths = {
+    biweekly: 0.5,
+    monthly: 1,
+    quarterly: 3,
+    fourmonthly: 4,
+    semiannual: 6,
+    annual: 12,
   };
 
   /* Revisa los ingresos con frecuencia para marcar como pagados los que ya deberían
@@ -996,6 +1106,7 @@ const PersonalFinance = () => {
     }
 
     let appearsFrom = null;
+    let startDate = null;
     if (expenseFrequency) {
       const start = new Date(expenseStartDate);
       const months = anticipationMonths[expenseFrequency] || 0;
@@ -1004,6 +1115,7 @@ const PersonalFinance = () => {
         start.getMonth() - months,
         1,
       ).toISOString();
+      startDate = start.toISOString();
     }
 
     const hasFrequency = !!expenseFrequency;
@@ -1013,6 +1125,7 @@ const PersonalFinance = () => {
       amount: parseFloat(newExpense),
       frequency: expenseFrequency || null,
       appearsFrom,
+      startDate,
       paid: !hasFrequency,
       carriedOver: false,
       ...(expenseFrequency === "biweekly" && {
@@ -1038,7 +1151,6 @@ const PersonalFinance = () => {
     setExpenseStartDate2("");
     setShowFrequencyExtras(false);
   };
-
   /**
    * Elimina un ingreso o gasto de la lista correspondiente y recalcula el total automáticamente.
    * Si el gasto tiene frecuencia, solicita confirmación antes de eliminar.
@@ -1172,27 +1284,31 @@ const PersonalFinance = () => {
   return (
     <Container>
       {/* Botón de reset para testing */}
-      {/*<button
-        onClick={resetForTesting}
-        style={{ backgroundColor: "red", color: "white", padding: "10px" }}
-      >
-        RESET TEST
-      </button>*/}
+      {/*
+        <button
+          onClick={resetForTesting}
+          style={{ backgroundColor: "red", color: "white", padding: "10px" }}
+        >
+          RESET TEST
+        </button>
+      */}
       {/* Sección de entrada para nuevos ingresos */}
       <IncAndExpContainer>
-        <Input
-          value={incomeType}
-          placeholder="Type of income"
-          onChange={(e) => setIncomeType(e.target.value)}
-        />
-        <Input
-          type="number"
-          placeholder="Income amount"
-          style={{ height: "35px", borderRadius: "10px", maxWidth: "90%" }}
-          value={newIncome}
-          onChange={(e) => setNewIncome(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addIncome()}
-        />
+        <div style={{ display: "flex", flexWrap: "nowrap" }}>
+          <Input
+            value={incomeType}
+            placeholder="Type of income"
+            onChange={(e) => setIncomeType(e.target.value)}
+          />
+          <Input
+            type="number"
+            placeholder="Income amount"
+            style={{ height: "35px", borderRadius: "10px", maxWidth: "90%" }}
+            value={newIncome}
+            onChange={(e) => setNewIncome(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && addIncome()}
+          />
+        </div>
 
         <div
           style={{

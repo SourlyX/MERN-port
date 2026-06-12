@@ -6,7 +6,7 @@
  */
 
 import { Fragment, useState } from "react";
-import getToday from "./utils";
+import { getToday } from "./utils";
 import styled from "styled-components";
 
 /* ========================
@@ -432,11 +432,13 @@ const Tables = ({
                                 color: "#aaa",
                               }}
                             >
-                              {target.monthNameIncome !== undefined
-                                ? `(${target.monthNameIncome})`
-                                : target.frequency
-                                  ? `(${target.frequency})`
-                                  : ""}
+                              {target.startDate
+                                ? `(${new Date(target.startDate).toLocaleString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })})`
+                                : target.monthNameIncome !== undefined
+                                  ? `(${target.monthNameIncome})`
+                                  : target.frequency
+                                    ? `(${target.frequency})`
+                                    : ""}
                             </span>
                           </span>
                         </div>
@@ -648,11 +650,13 @@ const Tables = ({
                               color: "#aaa",
                             }}
                           >
-                            {target.monthNameExpense !== undefined
-                              ? `(${target.monthNameExpense})`
-                              : target.frequency
-                                ? `(${target.frequency})`
-                                : ""}
+                            {target.startDate
+                              ? `(${new Date(target.startDate).toLocaleString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })})`
+                              : target.monthNameExpense !== undefined
+                                ? `(${target.monthNameExpense})`
+                                : target.frequency
+                                  ? `(${target.frequency})`
+                                  : ""}
                           </span>
                         </span>
                       </div>
@@ -728,7 +732,7 @@ const Tables = ({
             <TableRow>
               <TableCell>Money in Hand</TableCell>
               <TableCell>
-                <input
+                <EditInput
                   type="number"
                   value={moneyInHand}
                   onChange={(e) => setMoneyInHand(Number(e.target.value))}
