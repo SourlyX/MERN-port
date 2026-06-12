@@ -1294,7 +1294,7 @@ const PersonalFinance = () => {
       */}
       {/* Sección de entrada para nuevos ingresos */}
       <IncAndExpContainer>
-        <div style={{ display: "flex", flexWrap: "nowrap" }}>
+        <div style={{ display: "flex", flexWrap: "nowrap", max width: "100%" }}>
           <Input
             value={incomeType}
             placeholder="Type of income"
