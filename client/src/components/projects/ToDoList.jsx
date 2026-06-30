@@ -36,8 +36,14 @@ const Container = styled.div`
   padding: 30px;
   margin-top: 50px;
   margin-bottom: 50px;
-`;
 
+  @media (max-width: 768px) {
+    width: 95%;
+    padding: 20px;
+    margin-top: 50px;
+    margin-bottom: 20px;
+  }
+`;
 /** Fila de cada tarea individual */
 const Todo = styled.div`
   display: flex;
