@@ -1,10 +1,11 @@
 {
   "name": "mern-port",
   "version": "1.0.0",
+  "packageManager": "pnpm@11.22.0",
   "scripts": {
-    "server": "cd server && node server.js",
-    "client": "cd client && npm run dev",
-    "dev": "concurrently \"npm run server\" \"npm run client\""
+    "server": "pnpm --dir server server",
+    "client": "pnpm --dir client dev",
+    "dev": "concurrently \"pnpm server\" \"pnpm client\""
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
