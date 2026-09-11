@@ -82,6 +82,20 @@ const todoSchema = new mongoose.Schema({
   },
 });
 
+// Una lista conserva sus tareas embebidas para que el orden de creación y el
+// orden de las tareas se persistan tal como los ve el usuario.
+const todoListSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  todos: {
+    type: [todoSchema],
+    default: [],
+  },
+});
+
 const payInfoSchema = new mongoose.Schema({
   payType: {
     type: String,
@@ -160,6 +174,18 @@ const userSchema = new mongoose.Schema({
   },
   incomes: [transactionSchema],
   expenses: [transactionSchema],
+  todoLists: {
+    type: [todoListSchema],
+    default: [],
+  },
+  // Evita recrear una lista por defecto cuando un usuario que ya eliminó todas
+  // sus listas vuelve a iniciar sesión.
+  todoListsMigrationCompleted: {
+    type: Boolean,
+    default: false,
+  },
+  // Campo legado: se conserva temporalmente para migrar automáticamente las
+  // tareas de usuarios ya existentes a su primera lista.
   todos: [todoSchema],
   payInfo: payInfoSchema,
 });

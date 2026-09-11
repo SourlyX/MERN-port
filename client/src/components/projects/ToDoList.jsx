@@ -4,7 +4,7 @@
  * y sincronización con AuthContext.
  */
 
-import { useState, useContext } from "react";
+import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { updateUserData } from "../../api/users";
 import styled from "styled-components";
@@ -80,6 +80,35 @@ const NewTodo = styled.div`
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
+`;
+
+const ListControls = styled.div`
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  margin: -10px 0 25px;
+  flex-wrap: wrap;
+
+  select,
+  input {
+    min-height: 36px;
+    border-radius: 6px;
+    padding: 0 8px;
+  }
+`;
+
+const SecondaryButton = styled.button`
+  background: transparent;
+  color: #55f5ed;
+  border: 1px solid #55f5ed;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+
+  &:hover {
+    background: #55f5ed;
+    color: #2c3e50;
+  }
 `;
 
 /** Botón para agregar tarea */
@@ -192,10 +221,79 @@ const SortableTodo = ({ todo, index, onToggle, onRemove }) => {
  */
 const ToDoList = () => {
   const [newTodo, setNewTodo] = useState("");
+  const [newListName, setNewListName] = useState("");
+  const [selectedListId, setSelectedListId] = useState("");
   const { user, updateUser } = useContext(AuthContext);
 
-  // Lee directo del contexto — si no hay user, array vacío
-  const todos = user?.todos ?? [];
+  const todoLists = user?.todoLists ?? [];
+  const selectedList = todoLists.find((list) => list._id === selectedListId);
+  const todos = selectedList?.todos ?? [];
+
+  useEffect(() => {
+    if (!selectedListId && todoLists.length > 0) {
+      setSelectedListId(todoLists[0]._id);
+    } else if (
+      selectedListId &&
+      !todoLists.some((list) => list._id === selectedListId)
+    ) {
+      setSelectedListId(todoLists[0]?._id ?? "");
+    }
+  }, [todoLists, selectedListId]);
+
+  const persistLists = async (updatedLists) => {
+    updateUser({ ...user, todoLists: updatedLists });
+    const savedUser = await updateUserData({ todoLists: updatedLists });
+    if (savedUser) updateUser(savedUser);
+    return savedUser;
+  };
+
+  const createList = async () => {
+    const name = newListName.trim();
+    if (!name) return;
+
+    if (todoLists.some((list) => list.name === name)) {
+      const shouldCreate = window.confirm(
+        `La lista "${name}" ya existe. ¿Quieres crear otra?`,
+      );
+      if (!shouldCreate) return;
+    }
+
+    const savedUser = await persistLists([
+      ...todoLists,
+      { name, todos: [] },
+    ]);
+    const createdList = savedUser?.todoLists?.at(-1);
+    if (createdList) setSelectedListId(createdList._id);
+    setNewListName("");
+  };
+
+  const renameList = async () => {
+    if (!selectedList) return;
+    const name = window.prompt("Nuevo nombre de la lista:", selectedList.name);
+    if (name === null || !name.trim()) return;
+    await persistLists(
+      todoLists.map((list) =>
+        list._id === selectedListId ? { ...list, name: name.trim() } : list,
+      ),
+    );
+  };
+
+  const deleteList = async () => {
+    if (!selectedList) return;
+    const shouldDelete = window.confirm(
+      `¿Seguro que quieres eliminar la lista "${selectedList.name}" y todas sus tareas?`,
+    );
+    if (!shouldDelete) return;
+    await persistLists(todoLists.filter((list) => list._id !== selectedListId));
+  };
+
+  const updateSelectedTodos = async (updatedTodos) => {
+    await persistLists(
+      todoLists.map((list) =>
+        list._id === selectedListId ? { ...list, todos: updatedTodos } : list,
+      ),
+    );
+  };
 
   /* ---- Drag & Drop ---- */
 
@@ -227,8 +325,7 @@ const ToDoList = () => {
     const newIndex = todos.findIndex((t) => t._id === over.id);
     const updated = arrayMove(todos, oldIndex, newIndex);
 
-    updateUser({ ...user, todos: updated });
-    await updateUserData({ todos: updated });
+    await updateSelectedTodos(updated);
   };
 
   /* ---- CRUD Handlers ---- */
@@ -242,9 +339,7 @@ const ToDoList = () => {
     const updated = todos.map((todo, i) =>
       i === index ? { ...todo, active: !todo.active } : todo,
     );
-    updateUser({ ...user, todos: updated });
-    const savedUser = await updateUserData({ todos: updated });
-    if (savedUser) updateUser(savedUser);
+    await updateSelectedTodos(updated);
   };
 
   /** Agrega una nueva tarea. Ignora strings vacíos o solo espacios. */
@@ -253,28 +348,56 @@ const ToDoList = () => {
 
     const tempId = crypto.randomUUID();
     const updated = [...todos, { name: newTodo, active: true, _id: tempId }];
-    updateUser({ ...user, todos: updated });
     setNewTodo("");
 
     const payload = updated.map(({ _id, ...rest }) =>
       _id === tempId ? rest : { _id, ...rest },
     );
-    const savedUser = await updateUserData({ todos: payload });
-    if (savedUser) updateUser(savedUser);
+    await updateSelectedTodos(payload);
   };
 
   /** Elimina una tarea por índice. */
   const removeTodo = async (index) => {
     const updated = todos.filter((_, i) => i !== index);
-    updateUser({ ...user, todos: updated });
-    const savedUser = await updateUserData({ todos: updated });
-    if (savedUser) updateUser(savedUser);
+    await updateSelectedTodos(updated);
   };
   /* ===================== Renderizado ===================== */
   return (
     <>
       <Container>
         <Title>To-Do List</Title>
+
+        <ListControls>
+          <select
+            aria-label="Seleccionar lista"
+            value={selectedListId}
+            onChange={(event) => setSelectedListId(event.target.value)}
+          >
+            {todoLists.length === 0 ? (
+              <option value="">No hay listas</option>
+            ) : (
+              todoLists.map((list) => (
+                <option key={list._id} value={list._id}>
+                  {list.name}
+                </option>
+              ))
+            )}
+          </select>
+          <input
+            type="text"
+            placeholder="Nombre de lista"
+            value={newListName}
+            onChange={(event) => setNewListName(event.target.value)}
+            onKeyDown={(event) => event.key === "Enter" && createList()}
+          />
+          <SecondaryButton onClick={createList}>Crear lista</SecondaryButton>
+          <SecondaryButton onClick={renameList} disabled={!selectedList}>
+            Renombrar
+          </SecondaryButton>
+          <SecondaryButton onClick={deleteList} disabled={!selectedList}>
+            Eliminar
+          </SecondaryButton>
+        </ListControls>
 
         {/* DndContext — provee el contexto global de drag & drop */}
         <DndContext
@@ -300,7 +423,7 @@ const ToDoList = () => {
         </DndContext>
 
         {/* Input para agregar nueva tarea — soporta Enter y click */}
-        <NewTodo>
+        {selectedList && <NewTodo>
           <input
             type="text"
             placeholder="New To-Do"
@@ -310,7 +433,7 @@ const ToDoList = () => {
             onKeyDown={(e) => e.key === "Enter" && addTodo()}
           />
           <AddNew onClick={addTodo}>Add To-Do</AddNew>
-        </NewTodo>
+        </NewTodo>}
       </Container>
     </>
   );

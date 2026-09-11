@@ -2,6 +2,26 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+// Migra de forma transparente los documentos creados antes de soportar
+// múltiples listas. La lista se agrega al final, preservando el orden de
+// tareas original y sin tocar usuarios que ya tengan listas.
+const migrateLegacyTodos = async (user) => {
+  if (!user || user.todoListsMigrationCompleted) return user;
+
+  user.todoLists = [{ name: "Mi lista", todos: user.todos || [] }];
+  user.todoListsMigrationCompleted = true;
+  await User.updateOne(
+    { _id: user._id },
+    {
+      $set: {
+        todoLists: user.todoLists,
+        todoListsMigrationCompleted: true,
+      },
+    },
+  );
+  return user;
+};
+
 const generateAccessToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "15m" });
 };
@@ -54,6 +74,8 @@ const registerUser = async (req, res) => {
           amount: 0,
         },
       ],
+      todoLists: [],
+      todoListsMigrationCompleted: true,
       todos: [],
       payInfo: {
         payType: "Biweekly",
@@ -94,6 +116,8 @@ const loginUser = async (req, res) => {
         .status(401)
         .json({ success: false, message: "Invalid credentials" });
 
+    await migrateLegacyTodos(user);
+
     const accessToken = generateAccessToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
 
@@ -114,7 +138,7 @@ const loginUser = async (req, res) => {
         accessToken,
         incomes: user.incomes,
         expenses: user.expenses,
-        todos: user.todos,
+        todoLists: user.todoLists,
         payInfo: user.payInfo,
       },
     });
@@ -151,13 +175,16 @@ const refreshToken = (req, res) => {
 // @desc    Actualizar datos del usuario
 const updateUserData = async (req, res) => {
   try {
-    const { incomes, expenses, payInfo, todos } = req.body;
+    const { incomes, expenses, payInfo, todoLists } = req.body;
 
     const updateFields = {};
     if (Array.isArray(incomes)) updateFields.incomes = incomes;
     if (Array.isArray(expenses)) updateFields.expenses = expenses;
     if (payInfo) updateFields.payInfo = payInfo;
-    if (Array.isArray(todos)) updateFields.todos = todos;
+    if (Array.isArray(todoLists)) {
+      updateFields.todoLists = todoLists;
+      updateFields.todoListsMigrationCompleted = true;
+    }
 
     const updatedUserDoc = await User.findByIdAndUpdate(
       req.user.id,
@@ -185,6 +212,7 @@ const getUserData = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password");
     if (!user) return res.status(404).json({ message: "User not found" });
+    await migrateLegacyTodos(user);
     res.json({ data: user });
   } catch (err) {
     res.status(500).json({ message: err.message });
